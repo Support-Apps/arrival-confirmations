@@ -7,47 +7,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #FBFBFA;
-  --white: #FFFFFF;
-  --text: #1C1C1A;
-  --gold: #C5A880;
-  --border: #E5E5E2;
-  --muted: #777772;
-  --light-bg: #FAF9F6;
-  --font-head: 'Playfair Display', 'Times New Roman', serif;
-  --font-body: 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-ui: 'Assistant', Arial, sans-serif;
-  --font-deco: 'Cinzel', serif;
+  --bg: #FBFBFA; --white: #FFFFFF; --text: #1C1C1A; --gold: #C5A880;
+  --border: #E5E5E2; --muted: #777772; --light-bg: #FAF9F6;
+  --font-head: 'Playfair Display', serif; --font-body: 'Cormorant Garamond', serif;
+  --font-ui: 'Assistant', Arial, sans-serif; --font-deco: 'Cinzel', serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; }
-
-/* TABS */
 .tab-bar { display: flex; background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
 .tab-btn { flex: 1; padding: 14px 8px; font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--gold); }
 .tab-btn:hover:not(.active) { background: var(--light-bg); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* HEADER */
+.tab-panel { display: none; } .tab-panel.active { display: block; }
 .app-header { background: var(--white); border-bottom: 1px solid var(--text); padding: 28px 24px 20px; text-align: center; position: relative; }
 .bsd { font-family: var(--font-ui); font-size: 11px; letter-spacing: 2px; color: var(--muted); position: absolute; top: 10px; right: 14px; }
 .logo-branding { font-family: var(--font-deco); font-size: 15px; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; color: var(--text); margin-bottom: 6px; }
 .app-subtitle { font-family: var(--font-body); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
-
-/* CARD */
 .card { background: var(--white); border: 1px solid var(--border); margin: 16px; padding: 20px; }
 .card-title { font-family: var(--font-deco); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 6px; margin-bottom: 16px; }
-
-/* FORM */
 label { font-family: var(--font-ui); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #555550; font-weight: 700; display: block; margin-bottom: 4px; margin-top: 12px; }
 label:first-of-type { margin-top: 0; }
 input[type="text"], input[type="date"], input[type="url"], textarea, select { width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--bg); font-family: var(--font-ui); font-size: 13px; color: var(--text); outline: none; transition: border-color 0.2s; direction: rtl; }
 input:focus, textarea:focus, select:focus { border-color: var(--gold); background: var(--white); box-shadow: 0 0 0 3px rgba(197,168,128,0.15); }
 textarea { resize: vertical; min-height: 70px; }
-
-/* BUTTONS */
 .btn-action { background: var(--text); color: var(--white); border: none; padding: 14px; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; font-weight: 700; font-family: var(--font-ui); cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; display: block; }
 .btn-action:hover { background: var(--gold); }
 .btn-secondary { background: var(--white); color: var(--gold); border: 1px solid var(--gold); padding: 12px; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; font-weight: 700; font-family: var(--font-ui); cursor: pointer; transition: 0.2s; width: 100%; margin-top: 8px; display: block; }
@@ -56,21 +38,13 @@ textarea { resize: vertical; min-height: 70px; }
 .btn-danger:hover { background: #c0392b; color: var(--white); }
 .btn-whatsapp { background: #25D366; color: var(--white); border: none; padding: 14px; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; font-weight: 700; font-family: var(--font-ui); cursor: pointer; transition: 0.2s; width: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-whatsapp:hover { background: #1dba56; }
-
-/* PREVIEW BOX */
 .preview-box { background: var(--light-bg); border: 1px solid var(--gold); padding: 16px; font-family: var(--font-ui); font-size: 13px; line-height: 1.9; color: var(--text); white-space: pre-line; word-break: break-word; direction: rtl; text-align: right; }
-
-/* LINK BOX */
 .link-box { background: var(--bg); border: 1px solid var(--border); padding: 12px; font-family: var(--font-ui); font-size: 11px; line-height: 1.6; color: var(--muted); word-break: break-all; direction: ltr; text-align: left; }
-
-/* STATS */
 .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 16px; }
 .stat-box { background: var(--white); padding: 16px 8px; text-align: center; }
 .stat-num { font-family: var(--font-head); font-size: 30px; font-weight: 700; color: var(--text); display: block; line-height: 1; }
 .stat-label { font-family: var(--font-ui); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 4px; font-weight: 700; display: block; }
 .stat-box.gold .stat-num { color: var(--gold); }
-
-/* TABLE */
 .table-wrap { margin: 0 16px 16px; overflow-x: auto; border: 1px solid var(--border); }
 table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--white); min-width: 480px; font-family: var(--font-ui); }
 thead tr { background: var(--light-bg); }
@@ -81,36 +55,30 @@ tr:last-child td { border-bottom: none; }
 .badge-couple { background: var(--text); color: var(--white); }
 .badge-solo { border: 1px solid var(--gold); color: var(--gold); }
 .badge-no { background: var(--border); color: var(--muted); }
-
 .actions-row { display: flex; gap: 10px; margin: 0 16px 20px; }
 .actions-row .btn-action, .actions-row .btn-secondary, .actions-row .btn-danger { flex: 1; margin: 0; }
-
-/* EMPTY */
 .empty-state { text-align: center; padding: 48px 20px; }
 .empty-text { font-family: var(--font-body); font-size: 16px; color: var(--muted); letter-spacing: 1px; }
-
-/* TOAST */
 #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--white); padding: 10px 22px; font-family: var(--font-ui); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; z-index: 999; opacity: 0; transition: all 0.3s; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* GUEST PAGE */
+.status-bar { margin: 0 16px 16px; padding: 12px 16px; font-family: var(--font-ui); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+.status-bar.ok { background: #f0faf0; border: 1px solid #a8d5a8; color: #2d6a2d; }
+.status-bar.error { background: #fdf0f0; border: 1px solid #d5a8a8; color: #6a2d2d; }
+.status-bar.warn { background: #fdf8f0; border: 1px solid #d5c8a8; color: #6a5a2d; }
 #rsvpPage { display: none; min-height: 100vh; background: var(--bg); }
 .rsvp-hero { background: var(--white); border-bottom: 1px solid var(--text); padding: 28px 24px 24px; text-align: center; position: relative; }
 .rsvp-hero .bsd { color: var(--muted); font-size: 11px; letter-spacing: 2px; position: absolute; top: 10px; right: 14px; }
 .rsvp-hero .logo { font-family: var(--font-deco); font-size: 20px; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; margin-bottom: 12px; }
-.rsvp-hero .couple { font-family: var(--font-ui); font-size: 26px; font-weight: 700; font-style: normal; color: var(--text); margin-bottom: 8px; }
-.rsvp-hero .event-info { font-family: var(--font-ui); font-size: 14px; letter-spacing: 0.5px; color: var(--muted); line-height: 1.9; }
+.rsvp-hero .couple { font-family: var(--font-ui); font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.rsvp-hero .event-info { font-family: var(--font-ui); font-size: 14px; color: var(--muted); line-height: 1.9; }
 .rsvp-hero .gold-line { width: 60px; height: 1px; background: var(--gold); margin: 14px auto; }
-
 .rsvp-choices { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
-.choice-btn { width: 100%; padding: 15px 14px; border: 1px solid var(--border); background: var(--bg); font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; text-align: right; transition: all 0.18s; letter-spacing: 0.5px; }
+.choice-btn { width: 100%; padding: 15px 14px; border: 1px solid var(--border); background: var(--bg); font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; text-align: right; transition: all 0.18s; }
 .choice-btn:hover { border-color: var(--gold); background: var(--white); }
 .choice-btn.selected { background: var(--text); color: var(--white); border-color: var(--text); }
-
 .rsvp-submit-result { display: none; text-align: center; padding: 48px 24px; }
 .rsvp-submit-result h2 { font-family: var(--font-head); font-size: 24px; font-style: italic; margin-bottom: 8px; }
 .rsvp-submit-result p { font-family: var(--font-body); font-size: 16px; color: var(--muted); }
-
 hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 </style>
 </head>
@@ -126,34 +94,33 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     <div class="event-info" id="rsvpInfo"></div>
   </div>
 
+  <div id="guestImageWrap" style="display:none; margin:16px 16px 0;">
+    <img id="guestImage" style="width:100%; border:1px solid var(--border);">
+  </div>
+
   <div class="card" id="rsvpFormCard">
     <div class="card-title">אנא אשרו את הגעתכם</div>
-
     <label>שם מלא *</label>
     <input type="text" id="guestName" placeholder="שם פרטי ושם משפחה">
-
     <label>מספר טלפון</label>
     <input type="text" id="guestPhone" placeholder="050-0000000">
-
     <label style="margin-top:18px;">האם תגיעו?</label>
     <div class="rsvp-choices">
       <button class="choice-btn" onclick="selectChoice('couple', this)">בטח מגיע/ה! ועם בן/בת זוג</button>
       <button class="choice-btn" onclick="selectChoice('solo', this)">מגיע/ה בלי בן/בת זוג</button>
       <button class="choice-btn" onclick="selectChoice('not-coming', this)">לצערי לא מגיע/ה</button>
     </div>
-
     <div id="wazeSection" style="display:none; margin-top:8px;">
       <button class="btn-secondary" onclick="openWaze()">פתח ב-Waze לניווט לאולם</button>
     </div>
-
     <div id="bitSection" style="display:none;">
       <hr class="gold">
       <p style="font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;">מתנה ב-Bit</p>
       <button class="btn-secondary" onclick="openBit()">לתשלום ב-Bit לחצו כאן</button>
     </div>
-
     <hr class="gold">
-    <button class="btn-action" onclick="submitRSVP()">שלח אישור</button>
+    <div id="sendingMsg" style="display:none;text-align:center;padding:10px;font-family:var(--font-ui);font-size:13px;color:var(--muted);">שולח...</div>
+    <button class="btn-action" id="submitBtn" onclick="submitRSVP()">שלח אישור</button>
   </div>
 
   <div class="rsvp-submit-result" id="rsvpResult">
@@ -179,29 +146,39 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   <!-- SETUP TAB -->
   <div class="tab-panel active" id="tab-setup">
     <div class="card">
+      <div class="card-title">חיבור ל-Google Sheets</div>
+      <p style="font-family:var(--font-ui);font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
+        כדי לקבל אישורים מכל האורחים — הכניסי את כתובת ה-Web App שיצרת ב-Google Apps Script.
+        <br>אין לך עדיין? פתחי את קובץ <strong>הוראות-google-sheets.html</strong> לצעד-צעד.
+      </p>
+      <div id="sheetStatus" class="status-bar warn">⚠ טרם הוגדר חיבור — האישורים לא יישמרו לכל המכשירים</div>
+      <label>כתובת Google Apps Script Web App</label>
+      <input type="url" id="sheetUrl" placeholder="https://script.google.com/macros/s/..." oninput="updateSheetStatus()">
+      <button class="btn-secondary" onclick="testSheet()">בדוק חיבור</button>
+    </div>
+
+    <div class="card">
       <div class="card-title">פרטי האירוע</div>
-
-      <label>שמות בני הזוג</label>
+      <label>תמונת הזמנה (אופציונלי)</label>
+      <input type="file" id="inviteImage" accept="image/*" onchange="handleImageUpload(this)" style="padding:8px;font-size:12px;">
+      <div id="imagePreviewWrap" style="display:none;margin-top:10px;">
+        <img id="imagePreview" style="width:100%;border:1px solid var(--border);">
+        <button class="btn-danger" onclick="removeImage()" style="margin-top:6px;">הסר תמונה</button>
+      </div>
+      <label style="margin-top:14px;">שמות בני הזוג</label>
       <input type="text" id="coupleNames" placeholder="לדוגמה: שרה ודוד כהן" oninput="updatePreview()">
-
       <label>תאריך החתונה</label>
       <input type="date" id="weddingDate" oninput="updatePreview()">
-
       <label>שעת האירוע</label>
       <input type="text" id="weddingTime" placeholder="לדוגמה: 19:30" oninput="updatePreview()">
-
       <label>מיקום האירוע</label>
       <input type="text" id="weddingLocation" placeholder="שם האולם + כתובת" oninput="updatePreview()">
-
       <label>קישור Waze (ניתן להוסיף מאוחר יותר)</label>
       <input type="url" id="wazeLink" placeholder="https://waze.com/ul/..." oninput="updatePreview()">
-
       <label>קישור Bit (ניתן להוסיף מאוחר יותר)</label>
       <input type="url" id="bitLink" placeholder="https://app.bit.dev/..." oninput="updatePreview()">
-
       <label>הודעה אישית נוספת (אופציונלי)</label>
       <textarea id="personalMsg" placeholder="טקסט נוסף קצר אם תרצי..." oninput="updatePreview()"></textarea>
-
       <button class="btn-action" onclick="saveSettings()">שמור הגדרות</button>
       <button class="btn-danger" onclick="resetAll()">מחק את כל הנתונים והתחל מחדש</button>
     </div>
@@ -220,10 +197,8 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <div class="link-box" id="rsvpLinkBox">שמרו הגדרות כדי לייצר קישור</div>
       <button class="btn-secondary" onclick="copyLink()">העתק קישור</button>
     </div>
-
     <div class="card">
       <div class="card-title">שליחה בוואטסאפ</div>
-      <p style="font-family:var(--font-ui);font-size:12px;color:var(--muted);margin-bottom:12px;">שלחו את ההזמנה עם קישור אישור הגעה ישירות בוואטסאפ.</p>
       <button class="btn-whatsapp" onclick="sendWhatsApp()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         שלח בוואטסאפ
@@ -234,24 +209,14 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   <!-- RESPONSES TAB -->
   <div class="tab-panel" id="tab-responses">
     <div class="stats-bar">
-      <div class="stat-box">
-        <span class="stat-num" id="statTotal">0</span>
-        <span class="stat-label">סה״כ</span>
-      </div>
-      <div class="stat-box gold">
-        <span class="stat-num" id="statComing">0</span>
-        <span class="stat-label">מגיעים</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-num" id="statNotComing">0</span>
-        <span class="stat-label">לא מגיעים</span>
-      </div>
+      <div class="stat-box"><span class="stat-num" id="statTotal">0</span><span class="stat-label">סה״כ</span></div>
+      <div class="stat-box gold"><span class="stat-num" id="statComing">0</span><span class="stat-label">מגיעים</span></div>
+      <div class="stat-box"><span class="stat-num" id="statNotComing">0</span><span class="stat-label">לא מגיעים</span></div>
     </div>
-
-    <div id="tableArea">
-      <div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div>
+    <div style="margin:0 16px 10px;display:flex;gap:8px;">
+      <button class="btn-secondary" style="margin:0;flex:1;" onclick="loadFromSheet()">רענן מ-Google Sheets</button>
     </div>
-
+    <div id="tableArea"><div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div></div>
     <div class="actions-row" id="exportRow" style="display:none;">
       <button class="btn-action" onclick="exportCSV()">ייצוא לאקסל (CSV)</button>
       <button class="btn-danger" onclick="clearResponses()">נקה תשובות</button>
@@ -273,7 +238,9 @@ window.onload = function() {
   } else {
     document.getElementById('adminApp').style.display = 'block';
     loadSettings();
+    loadImagePreviewIfExists();
     renderResponsesTable();
+    updateSheetStatus();
   }
 };
 
@@ -282,11 +249,12 @@ function showTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
-  if (tab === 'responses') renderResponsesTable();
+  if (tab === 'responses') { loadFromSheet(); }
   if (tab === 'invite') updateInviteLink();
 }
 
 function loadSettings() {
+  if (settings.sheetUrl) document.getElementById('sheetUrl').value = settings.sheetUrl;
   if (settings.coupleNames) document.getElementById('coupleNames').value = settings.coupleNames;
   if (settings.weddingDate) document.getElementById('weddingDate').value = settings.weddingDate;
   if (settings.weddingTime) document.getElementById('weddingTime').value = settings.weddingTime;
@@ -299,6 +267,7 @@ function loadSettings() {
 
 function saveSettings() {
   settings = {
+    sheetUrl: document.getElementById('sheetUrl').value.trim(),
     coupleNames: document.getElementById('coupleNames').value.trim(),
     weddingDate: document.getElementById('weddingDate').value,
     weddingTime: document.getElementById('weddingTime').value.trim(),
@@ -308,21 +277,53 @@ function saveSettings() {
     personalMsg: document.getElementById('personalMsg').value.trim()
   };
   localStorage.setItem('weddingSettings', JSON.stringify(settings));
+  updateSheetStatus();
   showToast('ההגדרות נשמרו');
   updateInviteLink();
+}
+
+function updateSheetStatus() {
+  const url = document.getElementById('sheetUrl') ? document.getElementById('sheetUrl').value.trim() : settings.sheetUrl;
+  const el = document.getElementById('sheetStatus');
+  if (!el) return;
+  if (url && url.includes('script.google.com')) {
+    el.className = 'status-bar ok';
+    el.textContent = 'מחובר ל-Google Sheets';
+  } else {
+    el.className = 'status-bar warn';
+    el.textContent = 'טרם הוגדר חיבור — האישורים לא יישמרו לכל המכשירים';
+  }
+}
+
+async function testSheet() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (!url) { showToast('הכניסי כתובת תחילה'); return; }
+  showToast('בודק חיבור...');
+  try {
+    const res = await fetch(url + '?action=test');
+    const txt = await res.text();
+    if (txt.includes('OK')) {
+      document.getElementById('sheetStatus').className = 'status-bar ok';
+      document.getElementById('sheetStatus').textContent = 'החיבור תקין!';
+      showToast('החיבור תקין!');
+    } else {
+      showToast('תשובה לא צפויה — בדקי את ה-URL');
+    }
+  } catch(e) {
+    showToast('שגיאה — בדקי את ה-URL');
+  }
 }
 
 function resetAll() {
   if (confirm('פעולה זו תמחק את כל ההגדרות וכל התשובות שהתקבלו. להמשיך?')) {
     localStorage.removeItem('weddingSettings');
     localStorage.removeItem('weddingResponses');
-    settings = {};
-    responses = [];
-    ['coupleNames','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','personalMsg'].forEach(id => {
+    localStorage.removeItem('weddingImage');
+    settings = {}; responses = [];
+    ['sheetUrl','coupleNames','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','personalMsg'].forEach(id => {
       document.getElementById(id).value = '';
     });
-    updatePreview();
-    renderResponsesTable();
+    updatePreview(); renderResponsesTable(); updateSheetStatus();
     showToast('כל הנתונים נמחקו');
   }
 }
@@ -334,77 +335,64 @@ function formatDateHebrew(dateStr) {
 }
 
 function buildMessage(link) {
-  const couple  = settings.coupleNames   || '[שמות בני הזוג]';
-  const date    = settings.weddingDate   ? formatDateHebrew(settings.weddingDate) : '[תאריך]';
-  const time    = settings.weddingTime   || '[שעה]';
-  const loc     = settings.weddingLocation || '[מיקום]';
-  const personal = settings.personalMsg  ? '\n\n' + settings.personalMsg : '';
-  const waze    = settings.wazeLink      ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
-  const bit     = settings.bitLink       ? '\n\nמתנה ב-Bit: ' + settings.bitLink : '';
-  const rsvp    = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
-
-  return (
-    'הזמנה לחתונה\n\n' +
-    couple + '\n\n' +
-    'מתכבדים להזמינך לחגוג איתנו!\n\n' +
-    'תאריך: ' + date + '\n' +
-    'שעה: ' + time + '\n' +
-    'מיקום: ' + loc +
-    personal +
-    rsvp +
-    waze +
-    bit
-  );
+  const couple   = settings.coupleNames    || '[שמות בני הזוג]';
+  const date     = settings.weddingDate    ? formatDateHebrew(settings.weddingDate) : '[תאריך]';
+  const time     = settings.weddingTime    || '[שעה]';
+  const loc      = settings.weddingLocation || '[מיקום]';
+  const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
+  const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
+  const bit      = settings.bitLink        ? '\n\nמתנה ב-Bit: ' + settings.bitLink : '';
+  const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
+  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze + bit;
 }
 
 function updatePreview() {
-  // build from current form values (not saved settings)
-  const s = {
-    coupleNames:     document.getElementById('coupleNames').value.trim(),
-    weddingDate:     document.getElementById('weddingDate').value,
-    weddingTime:     document.getElementById('weddingTime').value.trim(),
-    weddingLocation: document.getElementById('weddingLocation').value.trim(),
-    wazeLink:        document.getElementById('wazeLink').value.trim(),
-    bitLink:         document.getElementById('bitLink').value.trim(),
-    personalMsg:     document.getElementById('personalMsg').value.trim()
-  };
-  const couple  = s.coupleNames     || '[שמות בני הזוג]';
-  const date    = s.weddingDate     ? formatDateHebrew(s.weddingDate) : '[תאריך]';
-  const time    = s.weddingTime     || '[שעה]';
-  const loc     = s.weddingLocation || '[מיקום]';
-  const personal = s.personalMsg    ? '\n\n' + s.personalMsg : '';
-  const waze    = s.wazeLink        ? '\n\nניווט לאולם: ' + s.wazeLink : '';
-  const bit     = s.bitLink         ? '\n\nמתנה ב-Bit: ' + s.bitLink : '';
-
+  const couple   = document.getElementById('coupleNames').value.trim()     || '[שמות בני הזוג]';
+  const dateVal  = document.getElementById('weddingDate').value;
+  const date     = dateVal ? formatDateHebrew(dateVal) : '[תאריך]';
+  const time     = document.getElementById('weddingTime').value.trim()     || '[שעה]';
+  const loc      = document.getElementById('weddingLocation').value.trim() || '[מיקום]';
+  const personal = document.getElementById('personalMsg').value.trim();
+  const waze     = document.getElementById('wazeLink').value.trim();
+  const bit      = document.getElementById('bitLink').value.trim();
   document.getElementById('previewBox').textContent =
-    'הזמנה לחתונה\n\n' +
-    couple + '\n\n' +
-    'מתכבדים להזמינך לחגוג איתנו!\n\n' +
-    'תאריך: ' + date + '\n' +
-    'שעה: ' + time + '\n' +
-    'מיקום: ' + loc +
-    personal +
+    'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc +
+    (personal ? '\n\n' + personal : '') +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
-    waze +
-    bit;
+    (waze ? '\n\nניווט לאולם: ' + waze : '') +
+    (bit  ? '\n\nמתנה ב-Bit: ' + bit   : '');
 }
 
-function getRsvpLink() {
-  return window.location.href.split('?')[0] + '?rsvp=1';
-}
-
-function updateInviteLink() {
-  document.getElementById('rsvpLinkBox').textContent = getRsvpLink();
-}
-
-function copyLink() {
-  navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק'));
-}
-
+function getRsvpLink() { return window.location.href.split('?')[0] + '?rsvp=1'; }
+function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
+function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 function sendWhatsApp() {
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
-  const text = buildMessage(getRsvpLink());
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.open('https://wa.me/?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
+}
+
+// IMAGE
+function handleImageUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    localStorage.setItem('weddingImage', e.target.result);
+    document.getElementById('imagePreview').src = e.target.result;
+    document.getElementById('imagePreviewWrap').style.display = 'block';
+    showToast('התמונה נשמרה');
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage() {
+  localStorage.removeItem('weddingImage');
+  document.getElementById('imagePreview').src = '';
+  document.getElementById('imagePreviewWrap').style.display = 'none';
+  document.getElementById('inviteImage').value = '';
+  showToast('התמונה הוסרה');
+}
+function loadImagePreviewIfExists() {
+  const img = localStorage.getItem('weddingImage');
+  if (img) { document.getElementById('imagePreview').src = img; document.getElementById('imagePreviewWrap').style.display = 'block'; }
 }
 
 // GUEST PAGE
@@ -418,7 +406,9 @@ function showGuestPage() {
   if (s.weddingLocation) info += s.weddingLocation;
   document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
-  if (s.bitLink) document.getElementById('bitSection').style.display = 'block';
+  if (s.bitLink)  document.getElementById('bitSection').style.display = 'block';
+  const img = localStorage.getItem('weddingImage');
+  if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
 }
 
 function selectChoice(choice, btn) {
@@ -426,30 +416,39 @@ function selectChoice(choice, btn) {
   document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (s.bitLink) {
-    document.getElementById('bitSection').style.display = choice !== 'not-coming' ? 'block' : 'none';
-  }
+  if (s.bitLink) document.getElementById('bitSection').style.display = choice !== 'not-coming' ? 'block' : 'none';
 }
+function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.wazeLink) window.open(s.wazeLink,'_blank'); }
+function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink)  window.open(s.bitLink, '_blank'); }
 
-function openWaze() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (s.wazeLink) window.open(s.wazeLink, '_blank');
-}
-
-function openBit() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (s.bitLink) window.open(s.bitLink, '_blank');
-}
-
-function submitRSVP() {
+async function submitRSVP() {
   const name = document.getElementById('guestName').value.trim();
   if (!name) { showToast('נא להזין שם'); return; }
   if (!selectedChoice) { showToast('נא לבחור האם תגיעו'); return; }
-  const list = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
   const now = new Date();
   const timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-  list.push({ name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, time: timeStr });
+  const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, time: timeStr };
+
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('sendingMsg').style.display = 'block';
+
+  // Send to Google Sheets
+  if (s.sheetUrl) {
+    try {
+      const statusLabel = selectedChoice==='couple' ? 'מגיע/ה עם בן/בת זוג' : selectedChoice==='solo' ? 'מגיע/ה לבד' : 'לא מגיע/ה';
+      const count = selectedChoice==='couple' ? 2 : selectedChoice==='solo' ? 1 : 0;
+      const params = new URLSearchParams({ name: entry.name, phone: entry.phone, status: statusLabel, count, time: timeStr });
+      await fetch(s.sheetUrl + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+    } catch(e) { /* no-cors won't throw */ }
+  }
+
+  // Also save locally as backup
+  const list = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  list.push(entry);
   localStorage.setItem('weddingResponses', JSON.stringify(list));
+
   document.getElementById('rsvpFormCard').style.display = 'none';
   document.getElementById('rsvpResult').style.display = 'block';
   if (selectedChoice === 'couple') {
@@ -464,84 +463,80 @@ function submitRSVP() {
   }
 }
 
+// Load from Google Sheets
+async function loadFromSheet() {
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  if (!s.sheetUrl) { renderResponsesTable(); return; }
+  showToast('טוען נתונים...');
+  try {
+    const res = await fetch(s.sheetUrl + '?action=get');
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      responses = data.map(r => ({ name: r.name||'', phone: r.phone||'', status: r.statusKey||r.status||'', time: r.time||'' }));
+      localStorage.setItem('weddingResponses', JSON.stringify(responses));
+      renderResponsesTable();
+      showToast('הנתונים עודכנו');
+    }
+  } catch(e) {
+    renderResponsesTable();
+    showToast('לא ניתן לטעון — בדקי חיבור');
+  }
+}
+
 // RESPONSES TABLE
 function renderResponsesTable() {
   responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
   const area = document.getElementById('tableArea');
   const exportRow = document.getElementById('exportRow');
-  const coming = responses.filter(r => r.status !== 'not-coming');
-  const notComing = responses.filter(r => r.status === 'not-coming');
-  const totalGuests = coming.reduce((s, r) => s + (r.status === 'couple' ? 2 : 1), 0);
-
+  const coming    = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה');
+  const notComing = responses.filter(r => r.status === 'not-coming' || r.status === 'לא מגיע/ה');
+  const totalGuests = coming.reduce((s, r) => s + (r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג' ? 2 : 1), 0);
   document.getElementById('statTotal').textContent = responses.length;
   document.getElementById('statComing').textContent = coming.length;
   document.getElementById('statNotComing').textContent = notComing.length;
-
-  if (responses.length === 0) {
+  if (!responses.length) {
     area.innerHTML = '<div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div>';
-    exportRow.style.display = 'none';
-    return;
+    exportRow.style.display = 'none'; return;
   }
   exportRow.style.display = 'flex';
-
-  let html = `<div class="table-wrap"><table><thead><tr>
-    <th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th>
-  </tr></thead><tbody>`;
+  let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th></tr></thead><tbody>`;
   responses.forEach((r, i) => {
-    const badge = r.status === 'couple'
-      ? '<span class="badge badge-couple">עם בן/בת זוג</span>'
-      : r.status === 'solo'
-      ? '<span class="badge badge-solo">לבד</span>'
-      : '<span class="badge badge-no">לא מגיע/ה</span>';
-    const count = r.status === 'couple' ? 2 : r.status === 'solo' ? 1 : 0;
-    html += `<tr>
-      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
-      <td><strong>${esc(r.name)}</strong></td>
-      <td style="color:var(--muted);">${esc(r.phone||'—')}</td>
-      <td>${badge}</td>
-      <td style="text-align:center;font-weight:700;">${count > 0 ? count : '—'}</td>
-      <td style="font-size:11px;color:var(--muted);">${r.time||''}</td>
-    </tr>`;
+    const isCouple = r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג';
+    const isNo     = r.status === 'not-coming' || r.status === 'לא מגיע/ה';
+    const badge = isCouple ? '<span class="badge badge-couple">עם בן/בת זוג</span>'
+                : isNo     ? '<span class="badge badge-no">לא מגיע/ה</span>'
+                           : '<span class="badge badge-solo">לבד</span>';
+    const count = isCouple ? 2 : isNo ? 0 : 1;
+    html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(r.name)}</strong></td><td style="color:var(--muted);">${esc(r.phone||'—')}</td><td>${badge}</td><td style="text-align:center;font-weight:700;">${count||'—'}</td><td style="font-size:11px;color:var(--muted);">${r.time||''}</td></tr>`;
   });
-  html += `</tbody></table></div>`;
-  html += `<div style="text-align:center;padding:6px 16px 12px;font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">סה״כ אורחים מגיעים: <strong style="color:var(--text);">${totalGuests}</strong></div>`;
+  html += `</tbody></table></div><div style="text-align:center;padding:6px 16px 12px;font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">סה״כ אורחים מגיעים: <strong style="color:var(--text);">${totalGuests}</strong></div>`;
   area.innerHTML = html;
 }
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 function clearResponses() {
-  if (confirm('למחוק את כל התשובות שהתקבלו?')) {
-    localStorage.removeItem('weddingResponses');
-    responses = [];
-    renderResponsesTable();
-    showToast('התשובות נמחקו');
+  if (confirm('למחוק את כל התשובות המקומיות?')) {
+    localStorage.removeItem('weddingResponses'); responses = [];
+    renderResponsesTable(); showToast('התשובות נמחקו');
   }
 }
-
 function exportCSV() {
   if (!responses.length) { showToast('אין נתונים לייצוא'); return; }
   const BOM = '\uFEFF';
-  const headers = ['#', 'שם', 'טלפון', 'סטטוס', 'אורחים', 'זמן קבלה'];
-  const rows = responses.map((r, i) => [
-    i+1, r.name, r.phone||'',
-    r.status==='couple'?'מגיע/ה עם בן/בת זוג':r.status==='solo'?'מגיע/ה לבד':'לא מגיע/ה',
-    r.status==='couple'?2:r.status==='solo'?1:0,
-    r.time||''
-  ]);
+  const headers = ['#','שם','טלפון','סטטוס','אורחים','זמן קבלה'];
+  const rows = responses.map((r,i) => {
+    const isCouple = r.status==='couple'||r.status==='מגיע/ה עם בן/בת זוג';
+    const isNo     = r.status==='not-coming'||r.status==='לא מגיע/ה';
+    return [i+1, r.name, r.phone||'', isCouple?'מגיע/ה עם בן/בת זוג':isNo?'לא מגיע/ה':'מגיע/ה לבד', isCouple?2:isNo?0:1, r.time||''];
+  });
   const csv = BOM + [headers,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download='אישורי_הגעה.csv'; a.click();
-  URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href=url; a.download='אישורי_הגעה.csv'; a.click(); URL.revokeObjectURL(url);
   showToast('הקובץ יורד...');
 }
-
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2600);
 }
 </script>
