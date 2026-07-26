@@ -399,19 +399,19 @@ tr:last-child td { border-bottom: none; }
   margin-bottom: 12px;
 }
 .rsvp-hero .couple {
-  font-family: var(--font-head);
-  font-size: 28px;
-  font-weight: 400;
-  font-style: italic;
+  font-family: var(--font-ui);
+  font-size: 26px;
+  font-weight: 700;
+  font-style: normal;
   color: var(--text);
   margin-bottom: 8px;
 }
 .rsvp-hero .event-info {
-  font-family: var(--font-body);
-  font-size: 15px;
-  letter-spacing: 1px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.5px;
   color: var(--muted);
-  line-height: 1.8;
+  line-height: 1.9;
 }
 .rsvp-hero .gold-line {
   width: 60px;
@@ -790,7 +790,7 @@ function renderResponsesTable() {
   exportRow.style.display = 'flex';
 
   let html = `<div class="table-wrap"><table><thead><tr>
-    <th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>זמן</th>
+    <th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th>
   </tr></thead><tbody>`;
   responses.forEach((r, i) => {
     const badge = r.status === 'couple'
@@ -798,11 +798,13 @@ function renderResponsesTable() {
       : r.status === 'solo'
       ? '<span class="badge badge-solo">לבד</span>'
       : '<span class="badge badge-no">לא מגיע/ה</span>';
+    const count = r.status === 'couple' ? 2 : r.status === 'solo' ? 1 : 0;
     html += `<tr>
       <td style="color:var(--muted);font-size:11px;">${i+1}</td>
       <td><strong>${esc(r.name)}</strong></td>
       <td style="color:var(--muted);">${esc(r.phone||'—')}</td>
       <td>${badge}</td>
+      <td style="text-align:center;font-weight:700;">${count > 0 ? count : '—'}</td>
       <td style="font-size:11px;color:var(--muted);">${r.time||''}</td>
     </tr>`;
   });
