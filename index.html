@@ -228,7 +228,15 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 <div id="toast"></div>
 
 <script>
-let settings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+const DEFAULTS = {
+  sheetUrl: 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec',
+  driveImage: 'https://drive.google.com/uc?export=view&id=1JGdo2srAhWQOqFgrgFBmVROifykdv55I',
+  wazeLink: 'https://waze.com/ul/hsv8suj5wy'
+};
+let settings = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('weddingSettings') || '{}'));
+if (!settings.sheetUrl) settings.sheetUrl = DEFAULTS.sheetUrl;
+if (!settings.driveImage) settings.driveImage = DEFAULTS.driveImage;
+if (!settings.wazeLink) settings.wazeLink = DEFAULTS.wazeLink;
 let responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
 let selectedChoice = null;
 
