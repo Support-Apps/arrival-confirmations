@@ -347,10 +347,8 @@ function buildMessage(link) {
   const loc      = settings.weddingLocation || '[מיקום]';
   const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
   const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
-  const bit      = settings.bitLink        ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + settings.bitLink
-                   : settings.bitPhone      ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + settings.bitPhone.replace(/-/g,'') : '';
   const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
-  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze + bit;
+  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze;
 }
 
 function updatePreview() {
@@ -450,10 +448,10 @@ async function submitRSVP() {
   document.getElementById('rsvpResult').style.display = 'block';
   if (selectedChoice === 'couple') {
     document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
-    document.getElementById('resultMsg').textContent = 'שמחים שתגיעו יחד לאירוע המיוחד!';
+    document.getElementById('resultMsg').textContent = 'שמחים שתגיעו לאירוע שלנו!';
   } else if (selectedChoice === 'solo') {
     document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
-    document.getElementById('resultMsg').textContent = 'שמחים שתצטרפו אלינו לאירוע המיוחד!';
+    document.getElementById('resultMsg').textContent = 'שמחים שתגיע/י לאירוע שלנו!';
   } else {
     document.getElementById('resultTitle').textContent = 'זה בסדר, תודה!';
     document.getElementById('resultMsg').textContent = 'חבל שלא תוכלו להגיע — נשמח לחגוג יחד בפעם אחרת!';
