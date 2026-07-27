@@ -342,7 +342,8 @@ function buildMessage(link) {
   const loc      = settings.weddingLocation || '[מיקום]';
   const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
   const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
-  const bit      = (settings.bitLink || settings.bitPhone) ? '\n\nניתן לשלוח מתנה גם ב-Bit' : '';
+  const bit      = settings.bitLink        ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + settings.bitLink
+                   : settings.bitPhone      ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + settings.bitPhone.replace(/-/g,'') : '';
   const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
   return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze + bit;
 }
@@ -362,7 +363,7 @@ function updatePreview() {
     (personal ? '\n\n' + personal : '') +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
     (waze ? '\n\nניווט לאולם: ' + waze : '') +
-    ((bit || bitPhone) ? '\n\nניתן לשלוח מתנה גם ב-Bit' : '');
+    (bit  ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + bit   : bitPhone ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + bitPhone.replace(/-/g,'') : '');
 }
 
 function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
@@ -490,6 +491,7 @@ function renderResponsesTable() {
     exportRow.style.display = 'none'; return;
   }
   exportRow.style.display = 'flex';
+
   let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th></tr></thead><tbody>`;
   responses.forEach((r, i) => {
     const isCouple = r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג';
