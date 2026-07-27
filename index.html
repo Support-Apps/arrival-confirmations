@@ -359,14 +359,11 @@ function updatePreview() {
   const loc      = document.getElementById('weddingLocation').value.trim() || '[מיקום]';
   const personal = document.getElementById('personalMsg').value.trim();
   const waze     = document.getElementById('wazeLink').value.trim();
-  const bit      = document.getElementById('bitLink').value.trim();
-  const bitPhone = document.getElementById('bitPhone').value.trim();
   document.getElementById('previewBox').textContent =
     'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc +
     (personal ? '\n\n' + personal : '') +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
-    (waze ? '\n\nניווט לאולם: ' + waze : '') +
-    (bit  ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + bit   : bitPhone ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + bitPhone.replace(/-/g,'') : '');
+    (waze ? '\n\nניווט לאולם: ' + waze : '');
 }
 
 function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
