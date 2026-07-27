@@ -452,7 +452,7 @@ async function submitRSVP() {
 
 // Load from Google Sheets
 async function loadFromSheet() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  const s = Object.assign({sheetUrl:'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec'}, JSON.parse(localStorage.getItem('weddingSettings') || '{}'));
   if (!s.sheetUrl) { renderResponsesTable(); return; }
   showToast('טוען נתונים...');
   try {
