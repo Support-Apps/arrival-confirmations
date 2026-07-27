@@ -159,13 +159,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
     <div class="card">
       <div class="card-title">פרטי האירוע</div>
-      <label>תמונת הזמנה — קישור מגוגל דרייב</label>
-      <input type="url" id="driveImageUrl" placeholder="https://drive.google.com/file/d/..." oninput="updateDriveImage()">
-      <p style="font-family:var(--font-ui);font-size:11px;color:var(--muted);margin-top:4px;">העלי תמונה לגוגל דרייב ← שתפי ← "כל מי שיש לו את הקישור" ← העתקי את הקישור לכאן</p>
-      <div id="imagePreviewWrap" style="display:none;margin-top:10px;">
-        <img id="imagePreview" style="width:100%;border:1px solid var(--border);">
-        <button class="btn-danger" onclick="removeImage()" style="margin-top:6px;">הסר תמונה</button>
-      </div>
+
       <label style="margin-top:14px;">שמות בני הזוג</label>
       <input type="text" id="coupleNames" placeholder="לדוגמה: שרה ודוד כהן" oninput="updatePreview()">
       <label>תאריך החתונה</label>
@@ -256,7 +250,6 @@ function showTab(tab, btn) {
 
 function loadSettings() {
   if (settings.sheetUrl) document.getElementById('sheetUrl').value = settings.sheetUrl;
-  if (settings.driveImage) { document.getElementById('driveImageUrl').value = settings.driveImage; document.getElementById('imagePreview').src = settings.driveImage; document.getElementById('imagePreviewWrap').style.display = 'block'; }
   if (settings.coupleNames) document.getElementById('coupleNames').value = settings.coupleNames;
   if (settings.weddingDate) document.getElementById('weddingDate').value = settings.weddingDate;
   if (settings.weddingTime) document.getElementById('weddingTime').value = settings.weddingTime;
@@ -268,12 +261,6 @@ function loadSettings() {
 }
 
 function saveSettings() {
-  let driveRaw = document.getElementById('driveImageUrl').value.trim();
-  let driveImg = '';
-  if (driveRaw) {
-    const m = driveRaw.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    driveImg = m ? 'https://drive.google.com/uc?export=view&id=' + m[1] : driveRaw;
-  }
   settings = {
     sheetUrl: document.getElementById('sheetUrl').value.trim(),
     coupleNames: document.getElementById('coupleNames').value.trim(),
@@ -282,8 +269,7 @@ function saveSettings() {
     weddingLocation: document.getElementById('weddingLocation').value.trim(),
     wazeLink: document.getElementById('wazeLink').value.trim(),
     bitLink: document.getElementById('bitLink').value.trim(),
-    personalMsg: document.getElementById('personalMsg').value.trim(),
-    driveImage: driveImg
+    personalMsg: document.getElementById('personalMsg').value.trim()
   };
   localStorage.setItem('weddingSettings', JSON.stringify(settings));
   updateSheetStatus();
@@ -392,32 +378,7 @@ function handleImageUpload(input) {
   };
   reader.readAsDataURL(file);
 }
-function updateDriveImage() {
-  let url = document.getElementById('driveImageUrl').value.trim();
-  if (!url) return;
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) url = 'https://drive.google.com/uc?export=view&id=' + m[1];
-  localStorage.setItem('weddingImage', url);
-  document.getElementById('imagePreview').src = url;
-  document.getElementById('imagePreviewWrap').style.display = 'block';
-  showToast('התמונה עודכנה');
-}
-function removeImage() {
-  localStorage.removeItem('weddingImage');
-  document.getElementById('imagePreview').src = '';
-  document.getElementById('imagePreviewWrap').style.display = 'none';
-  document.getElementById('driveImageUrl').value = '';
-  showToast('התמונה הוסרה');
-}
-function loadImagePreviewIfExists() {
-  const img = localStorage.getItem('weddingImage');
-  if (img) {
-    document.getElementById('imagePreview').src = img;
-    document.getElementById('imagePreviewWrap').style.display = 'block';
-    const origId = img.match(/id=([a-zA-Z0-9_-]+)/);
-    if (origId) document.getElementById('driveImageUrl').value = 'https://drive.google.com/file/d/' + origId[1] + '/view';
-  }
-}
+function loadImagePreviewIfExists() {}
 
 // GUEST PAGE
 function showGuestPage() {
@@ -431,7 +392,7 @@ function showGuestPage() {
   document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
   if (s.bitLink)  document.getElementById('bitSection').style.display = 'block';
-  const img = s.driveImage || localStorage.getItem('weddingImage');
+  const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
 }
 
@@ -516,7 +477,7 @@ function renderResponsesTable() {
   const notComing = responses.filter(r => r.status === 'not-coming' || r.status === 'לא מגיע/ה');
   const totalGuests = coming.reduce((s, r) => s + (r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג' ? 2 : 1), 0);
   document.getElementById('statTotal').textContent = responses.length;
-  document.getElementById('statComing').textContent = coming.length;
+  document.getElementById('statComing').textContent = totalGuests;
   document.getElementById('statNotComing').textContent = notComing.length;
   if (!responses.length) {
     area.innerHTML = '<div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div>';
