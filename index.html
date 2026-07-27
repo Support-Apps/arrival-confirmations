@@ -342,8 +342,7 @@ function buildMessage(link) {
   const loc      = settings.weddingLocation || '[מיקום]';
   const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
   const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
-  const bit      = settings.bitLink        ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + settings.bitLink
-                   : settings.bitPhone      ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + settings.bitPhone.replace(/-/g,'') : '';
+  const bit      = (settings.bitLink || settings.bitPhone) ? '\n\nניתן לשלוח מתנה גם ב-Bit' : '';
   const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
   return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze + bit;
 }
@@ -363,7 +362,7 @@ function updatePreview() {
     (personal ? '\n\n' + personal : '') +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
     (waze ? '\n\nניווט לאולם: ' + waze : '') +
-    (bit  ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + bit   : bitPhone ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + bitPhone.replace(/-/g,'') : '');
+    ((bit || bitPhone) ? '\n\nניתן לשלוח מתנה גם ב-Bit' : '');
 }
 
 function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
@@ -409,10 +408,10 @@ function selectChoice(choice, btn) {
   document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (s.bitLink) document.getElementById('bitSection').style.display = choice !== 'not-coming' ? 'block' : 'none';
+  if (s.bitLink || s.bitPhone) document.getElementById('bitSection').style.display = choice !== 'not-coming' ? 'block' : 'none';
 }
 function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.wazeLink) window.open(s.wazeLink,'_blank'); }
-function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink)  window.open(s.bitLink, '_blank'); }
+function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink) window.open(s.bitLink,'_blank'); else if(s.bitPhone) window.open('https://pay.bit.digital/'+s.bitPhone.replace(/-/g,''),'_blank'); }
 
 async function submitRSVP() {
   const name = document.getElementById('guestName').value.trim();
