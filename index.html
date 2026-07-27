@@ -404,7 +404,6 @@ function showGuestPage() {
   if (s.weddingLocation) info += s.weddingLocation;
   document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
-  if (s.bitLink || s.bitPhone)  document.getElementById('bitSection').style.display = 'block';
   const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
 }
