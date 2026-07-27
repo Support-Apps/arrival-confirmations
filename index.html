@@ -175,6 +175,8 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <input type="url" id="wazeLink" placeholder="https://waze.com/ul/..." oninput="updatePreview()">
       <label>קישור Bit (ניתן להוסיף מאוחר יותר)</label>
       <input type="url" id="bitLink" placeholder="https://app.bit.dev/..." oninput="updatePreview()">
+      <label>מספר טלפון לביט (חלופה לקישור)</label>
+      <input type="text" id="bitPhone" placeholder="050-0000000" value="0586345351" oninput="updatePreview()">
       <label>הודעה אישית נוספת (אופציונלי)</label>
       <textarea id="personalMsg" placeholder="טקסט נוסף קצר אם תרצי..." oninput="updatePreview()"></textarea>
       <button class="btn-action" onclick="saveSettings()">שמור הגדרות</button>
@@ -258,6 +260,7 @@ function loadSettings() {
   if (settings.weddingLocation) document.getElementById('weddingLocation').value = settings.weddingLocation;
   if (settings.wazeLink) document.getElementById('wazeLink').value = settings.wazeLink;
   if (settings.bitLink) document.getElementById('bitLink').value = settings.bitLink;
+  if (settings.bitPhone) document.getElementById('bitPhone').value = settings.bitPhone;
   if (settings.personalMsg) document.getElementById('personalMsg').value = settings.personalMsg;
   updatePreview();
 }
@@ -271,6 +274,7 @@ function saveSettings() {
     weddingLocation: document.getElementById('weddingLocation').value.trim(),
     wazeLink: document.getElementById('wazeLink').value.trim(),
     bitLink: document.getElementById('bitLink').value.trim(),
+    bitPhone: document.getElementById('bitPhone').value.trim(),
     personalMsg: document.getElementById('personalMsg').value.trim()
   };
   localStorage.setItem('weddingSettings', JSON.stringify(settings));
@@ -317,7 +321,7 @@ function resetAll() {
     localStorage.removeItem('weddingResponses');
     localStorage.removeItem('weddingImage');
     settings = {}; responses = [];
-    ['sheetUrl','coupleNames','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','personalMsg'].forEach(id => {
+    ['sheetUrl','coupleNames','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','bitPhone','personalMsg'].forEach(id => {
       document.getElementById(id).value = '';
     });
     updatePreview(); renderResponsesTable(); updateSheetStatus();
@@ -338,7 +342,8 @@ function buildMessage(link) {
   const loc      = settings.weddingLocation || '[מיקום]';
   const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
   const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
-  const bit      = settings.bitLink        ? '\n\nמתנה ב-Bit: ' + settings.bitLink : '';
+  const bit      = settings.bitLink        ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + settings.bitLink
+                   : settings.bitPhone      ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + settings.bitPhone.replace(/-/g,'') : '';
   const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
   return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze + bit;
 }
@@ -352,12 +357,13 @@ function updatePreview() {
   const personal = document.getElementById('personalMsg').value.trim();
   const waze     = document.getElementById('wazeLink').value.trim();
   const bit      = document.getElementById('bitLink').value.trim();
+  const bitPhone = document.getElementById('bitPhone').value.trim();
   document.getElementById('previewBox').textContent =
     'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc +
     (personal ? '\n\n' + personal : '') +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
     (waze ? '\n\nניווט לאולם: ' + waze : '') +
-    (bit  ? '\n\nמתנה ב-Bit: ' + bit   : '');
+    (bit  ? '\n\nניתן לשלוח מתנה גם ב-Bit: ' + bit   : bitPhone ? '\n\nניתן לשלוח מתנה גם ב-Bit: https://pay.bit.digital/' + bitPhone.replace(/-/g,'') : '');
 }
 
 function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
@@ -393,7 +399,7 @@ function showGuestPage() {
   if (s.weddingLocation) info += s.weddingLocation;
   document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
-  if (s.bitLink)  document.getElementById('bitSection').style.display = 'block';
+  if (s.bitLink || s.bitPhone)  document.getElementById('bitSection').style.display = 'block';
   const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
 }
