@@ -228,13 +228,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 <div id="toast"></div>
 
 <script>
-const DEFAULTS = {
-  sheetUrl: 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec',
-  driveImage: 'https://drive.google.com/uc?export=view&id=1qksMD2Ls-1KPGdr43WYteMZSfZUaYShn'
-};
-let settings = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('weddingSettings') || '{}'));
-if (!settings.sheetUrl) settings.sheetUrl = DEFAULTS.sheetUrl;
-if (!settings.driveImage) settings.driveImage = DEFAULTS.driveImage;
+let settings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
 let responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
 let selectedChoice = null;
 
@@ -378,7 +372,7 @@ function updatePreview() {
     (bit  ? '\n\nמתנה ב-Bit: ' + bit   : '');
 }
 
-function getRsvpLink() { return window.location.href.split('?')[0] + '?rsvp=1'; }
+function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 function sendWhatsApp() {
