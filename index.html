@@ -431,7 +431,7 @@ function showGuestPage() {
   document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
   if (s.bitLink)  document.getElementById('bitSection').style.display = 'block';
-  const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
+  const img = s.driveImage || localStorage.getItem('weddingImage');
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
 }
 
@@ -516,7 +516,7 @@ function renderResponsesTable() {
   const notComing = responses.filter(r => r.status === 'not-coming' || r.status === 'לא מגיע/ה');
   const totalGuests = coming.reduce((s, r) => s + (r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג' ? 2 : 1), 0);
   document.getElementById('statTotal').textContent = responses.length;
-  document.getElementById('statComing').textContent = totalGuests;
+  document.getElementById('statComing').textContent = coming.length;
   document.getElementById('statNotComing').textContent = notComing.length;
   if (!responses.length) {
     area.innerHTML = '<div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div>';
