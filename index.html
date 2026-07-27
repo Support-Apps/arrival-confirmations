@@ -113,6 +113,9 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="choice-btn" onclick="selectChoice('solo', this)">מגיע/ה בלי בן/בת זוג</button>
       <button class="choice-btn" onclick="selectChoice('not-coming', this)">לצערי לא מגיע/ה</button>
     </div>
+    <hr class="gold">
+    <div id="sendingMsg" style="display:none;text-align:center;padding:10px;font-family:var(--font-ui);font-size:13px;color:var(--muted);">שולח...</div>
+    <button class="btn-action" id="submitBtn" onclick="submitRSVP()">שלח אישור</button>
     <div id="wazeSection" style="display:none; margin-top:8px;">
       <button class="btn-secondary" onclick="openWaze()">פתח ב-Waze לניווט לאולם</button>
     </div>
@@ -121,9 +124,6 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <p style="font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;">מתנה ב-Bit</p>
       <button class="btn-secondary" onclick="openBit()">לתשלום ב-Bit לחצו כאן</button>
     </div>
-    <hr class="gold">
-    <div id="sendingMsg" style="display:none;text-align:center;padding:10px;font-family:var(--font-ui);font-size:13px;color:var(--muted);">שולח...</div>
-    <button class="btn-action" id="submitBtn" onclick="submitRSVP()">שלח אישור</button>
   </div>
 
   <div class="rsvp-submit-result" id="rsvpResult">
@@ -414,7 +414,7 @@ async function submitRSVP() {
   if (!name) { showToast('נא להזין שם'); return; }
   if (!selectedChoice) { showToast('נא לבחור האם תגיעו'); return; }
 
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  const s = Object.assign({sheetUrl:'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec'}, JSON.parse(localStorage.getItem('weddingSettings') || '{}'));
   const now = new Date();
   const timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
   const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, time: timeStr };
