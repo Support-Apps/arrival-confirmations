@@ -272,13 +272,13 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="hpicker-close" onclick="closeHebrewPicker()">✕</button>
     </div>
     <div class="hpicker-selects">
-      <select id="hpMonthSel" onchange="renderHebrewCal()"></select>
-      <select id="hpYearSel" onchange="renderHebrewCal()"></select>
+      <select id="hpMonthSel" onchange="hpMonthChanged(this)"></select>
+      <select id="hpYearSel" onchange="hpYearChanged(this)"></select>
     </div>
     <div class="hpicker-nav">
-      <button onclick="hpNavMonth(-1)">הקודם ►</button>
+      <button onclick="hpNavMonth(1)">הבא ◄</button>
       <div class="hpicker-month-label" id="hpMonthLabel"></div>
-      <button onclick="hpNavMonth(1)">◄ הבא</button>
+      <button onclick="hpNavMonth(-1)">► הקודם</button>
     </div>
     <div class="hpicker-grid" id="hpGrid"></div>
   </div>
@@ -758,12 +758,15 @@ function closeHebrewPickerIfBg(e) {
 }
 
 function getHebrewYearLabel(hebYear) {
+  // Get the Hebrew letter notation (e.g. התשפ"ה) from Intl
   const gregYear = hebYear - 3761;
   for (let mo = 7; mo <= 11; mo++) {
     const d = new Date(gregYear, mo, 1, 12, 0, 0);
     const p = getHebrewParts(d);
     if (p.year === hebYear) {
-      return _hebFmt.formatToParts(d).find(pt => pt.type === "year")?.value || String(hebYear);
+      const letterYear = _hebFmt.formatToParts(d).find(pt => pt.type === "year")?.value;
+      if (letterYear) return `${letterYear} (${hebYear})`;
+      break;
     }
   }
   return String(hebYear);
@@ -816,6 +819,47 @@ function buildAndRenderCal() {
 
 function buildHebrewSelects() { buildAndRenderCal(); }
 function renderHebrewCal()    { buildAndRenderCal(); }
+
+function hpMonthChanged(sel) {
+  hpMonth = Number(sel.value);
+  renderCalOnly();
+}
+function hpYearChanged(sel) {
+  hpYear = Number(sel.value);
+  // make sure current month exists in new year
+  const months = getHebrewMonthsInYear(hpYear);
+  if (!months.find(m => m.num === hpMonth)) hpMonth = months[0].num;
+  // rebuild both selects (year didn't change so month select needs refresh for leap year)
+  buildAndRenderCal();
+}
+
+// Renders only the grid and month-label, without touching the selects
+function renderCalOnly() {
+  const months = getHebrewMonthsInYear(hpYear);
+  const curMonthObj = months.find(m => m.num === hpMonth) || months[0];
+  document.getElementById("hpMonthLabel").textContent =
+    (curMonthObj?.name || "") + " " + getHebrewYearLabel(hpYear);
+
+  const firstGreg = gregDateOfHebrewMonth(hpYear, hpMonth);
+  if (!firstGreg) {
+    document.getElementById("hpGrid").innerHTML = '<div style="padding:16px;text-align:center;">שגיאה</div>';
+    return;
+  }
+  const dim = hebrewDaysInMonth(hpYear, hpMonth);
+  const dow = firstGreg.getDay();
+  const DOW_LABELS = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
+  let html = DOW_LABELS.map(l => `<div class="hpicker-dow">${l}</div>`).join("");
+  const curHebStr = document.getElementById("hebrewDate").value;
+  for (let i = 0; i < dow; i++) html += '<div class="hpicker-day empty"></div>';
+  for (let day = 1; day <= dim; day++) {
+    const greg     = new Date(firstGreg.getTime() + (day - 1) * 86400000);
+    const dayLabel = _hebFmt.formatToParts(greg).find(p => p.type === "day")?.value || String(day);
+    const fullStr  = _hebFmt.format(greg);
+    const isSel    = curHebStr === fullStr;
+    html += `<div class="hpicker-day${isSel ? ' selected' : ''}" onclick="pickHebrewDay(${day})">${dayLabel}</div>`;
+  }
+  document.getElementById("hpGrid").innerHTML = html;
+}
 
 function hpNavMonth(delta) {
   const months = getHebrewMonthsInYear(hpYear);
