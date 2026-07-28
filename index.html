@@ -353,9 +353,11 @@ function resetAll() {
 function formatDateHebrew(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T12:00:00');
-  const dateOnly = d.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
-  const weekday  = d.toLocaleDateString('he-IL', { weekday: 'long' });
-  return dateOnly + ', ' + weekday;
+  const day     = d.toLocaleDateString('he-IL', { day: 'numeric' });
+  const month   = d.toLocaleDateString('he-IL', { month: 'long' });
+  const year    = d.toLocaleDateString('he-IL', { year: 'numeric' });
+  const weekday = d.toLocaleDateString('he-IL', { weekday: 'long' });
+  return day + ' ב' + month + ' ' + year + ', ' + weekday;
 }
 
 function buildMessage(link) {
