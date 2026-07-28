@@ -119,16 +119,12 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     <div id="wazeSection" style="display:none; margin-top:8px;">
       <button class="btn-secondary" onclick="openWaze()">פתח ב-Waze לניווט לאולם</button>
     </div>
-    <div id="bitSection" style="display:none;">
-      <hr class="gold">
-      <p style="font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:8px;">מתנה ב-Bit</p>
-      <button class="btn-secondary" onclick="openBit()">לתשלום ב-Bit לחצו כאן</button>
-    </div>
   </div>
 
   <div class="rsvp-submit-result" id="rsvpResult">
     <h2 id="resultTitle">תודה!</h2>
     <p id="resultMsg">האישור שלך התקבל.</p>
+    <p id="deadlineNote" style="display:none; font-family:var(--font-ui); font-size:12px; letter-spacing:0.5px; color:var(--muted); margin-top:14px;"></p>
     <div id="bitResultSection" style="display:none; margin-top:28px;">
       <hr class="gold">
       <p style="font-family:var(--font-ui);font-size:12px;letter-spacing:1px;color:var(--muted);margin:16px 0 10px;">ניתן לשלוח מתנה גם ב-Bit</p>
@@ -350,9 +346,10 @@ function buildMessage(link) {
   const time     = settings.weddingTime    || '[שעה]';
   const loc      = settings.weddingLocation || '[מיקום]';
   const personal = settings.personalMsg   ? '\n\n' + settings.personalMsg : '';
+  const deadline = settings.rsvpDeadline  ? '\n\nנא לאשר הגעה עד לתאריך ' + formatDateHebrew(settings.rsvpDeadline) : '';
   const waze     = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
   const rsvp     = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
-  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + rsvp + waze;
+  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + deadline + rsvp + waze;
 }
 
 function updatePreview() {
@@ -362,10 +359,13 @@ function updatePreview() {
   const time     = document.getElementById('weddingTime').value.trim()     || '[שעה]';
   const loc      = document.getElementById('weddingLocation').value.trim() || '[מיקום]';
   const personal = document.getElementById('personalMsg').value.trim();
+  const deadlineVal = document.getElementById('rsvpDeadline').value;
+  const deadline = deadlineVal ? '\n\nנא לאשר הגעה עד לתאריך ' + formatDateHebrew(deadlineVal) : '';
   const waze     = document.getElementById('wazeLink').value.trim();
   document.getElementById('previewBox').textContent =
     'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + date + '\nשעה: ' + time + '\nמיקום: ' + loc +
     (personal ? '\n\n' + personal : '') +
+    deadline +
     '\n\nלאישור הגעה לחצו על הקישור:\n[הקישור יופיע כאן]' +
     (waze ? '\n\nניווט לאולם: ' + waze : '');
 }
@@ -411,8 +411,6 @@ function selectChoice(choice, btn) {
   selectedChoice = choice;
   document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (s.bitLink || s.bitPhone) document.getElementById('bitSection').style.display = choice !== 'not-coming' ? 'block' : 'none';
 }
 function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.wazeLink) window.open(s.wazeLink,'_blank'); }
 function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink) window.open(s.bitLink,'_blank'); else if(s.bitPhone) window.open('https://pay.bit.digital/'+s.bitPhone.replace(/-/g,''),'_blank'); }
@@ -458,6 +456,10 @@ async function submitRSVP() {
     document.getElementById('resultMsg').textContent = 'חבל שלא תוכלו להגיע — נשמח לחגוג יחד בפעם אחרת!';
   }
   const sSettings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  if (sSettings.rsvpDeadline) {
+    document.getElementById('deadlineNote').textContent = 'נא לאשר הגעה עד לתאריך ' + formatDateHebrew(sSettings.rsvpDeadline);
+    document.getElementById('deadlineNote').style.display = 'block';
+  }
   if (sSettings.bitLink || sSettings.bitPhone) {
     document.getElementById('bitResultSection').style.display = 'block';
   }
@@ -472,7 +474,7 @@ async function loadFromSheet() {
     const res = await fetch(s.sheetUrl + '?action=get');
     const data = await res.json();
     if (Array.isArray(data)) {
-      responses = data.map(r => ({ name: r.name||'', phone: r.phone||'', status: r.statusKey||r.status||'', time: r.time||'' }));
+      responses = data.map(r => ({ name: String(r.name||''), phone: String(r.phone||''), status: String(r.statusKey||r.status||''), time: String(r.time||'') }));
       localStorage.setItem('weddingResponses', JSON.stringify(responses));
       renderResponsesTable();
       showToast('הנתונים עודכנו');
@@ -501,19 +503,23 @@ function renderResponsesTable() {
 
   let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th></tr></thead><tbody>`;
   responses.forEach((r, i) => {
-    const isCouple = r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג';
-    const isNo     = r.status === 'not-coming' || r.status === 'לא מגיע/ה';
-    const badge = isCouple ? '<span class="badge badge-couple">עם בן/בת זוג</span>'
-                : isNo     ? '<span class="badge badge-no">לא מגיע/ה</span>'
-                           : '<span class="badge badge-solo">לבד</span>';
-    const count = isCouple ? 2 : isNo ? 0 : 1;
-    html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(r.name)}</strong></td><td style="color:var(--muted);">${esc(r.phone||'—')}</td><td>${badge}</td><td style="text-align:center;font-weight:700;">${count||'—'}</td><td style="font-size:11px;color:var(--muted);">${r.time||''}</td></tr>`;
+    try {
+      const isCouple = r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג';
+      const isNo     = r.status === 'not-coming' || r.status === 'לא מגיע/ה';
+      const badge = isCouple ? '<span class="badge badge-couple">עם בן/בת זוג</span>'
+                  : isNo     ? '<span class="badge badge-no">לא מגיע/ה</span>'
+                             : '<span class="badge badge-solo">לבד</span>';
+      const count = isCouple ? 2 : isNo ? 0 : 1;
+      html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(r.name)}</strong></td><td style="color:var(--muted);">${esc(r.phone||'—')}</td><td>${badge}</td><td style="text-align:center;font-weight:700;">${count||'—'}</td><td style="font-size:11px;color:var(--muted);">${esc(r.time)}</td></tr>`;
+    } catch(e) {
+      html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td colspan="5" style="color:#c0392b;">שגיאה בהצגת שורה זו</td></tr>`;
+    }
   });
   html += `</tbody></table></div><div style="text-align:center;padding:6px 16px 12px;font-family:var(--font-ui);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">סה״כ אורחים מגיעים: <strong style="color:var(--text);">${totalGuests}</strong></div>`;
   area.innerHTML = html;
 }
 
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function clearResponses() {
   if (confirm('למחוק את כל התשובות המקומיות?')) {
     localStorage.removeItem('weddingResponses'); responses = [];
