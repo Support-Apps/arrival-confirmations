@@ -65,7 +65,7 @@ tr:last-child td { border-bottom: none; }
 #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--white); padding: 10px 22px; font-family: var(--font-ui); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; z-index: 999; opacity: 0; transition: all 0.3s; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-
+/* Hebrew Calendar Picker */
 .status-bar { margin: 0 16px 16px; padding: 12px 16px; font-family: var(--font-ui); font-size: 12px; display: flex; align-items: center; gap: 8px; }
 .status-bar.ok { background: #f0faf0; border: 1px solid #a8d5a8; color: #2d6a2d; }
 .status-bar.error { background: #fdf0f0; border: 1px solid #d5a8a8; color: #6a2d2d; }
@@ -242,7 +242,6 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 <div id="toast"></div>
 
 
-
 <script>
 let settings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
 let responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
@@ -354,7 +353,9 @@ function resetAll() {
 function formatDateHebrew(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateOnly = d.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
+  const weekday  = d.toLocaleDateString('he-IL', { weekday: 'long' });
+  return dateOnly + ', ' + weekday;
 }
 
 function buildMessage(link) {
@@ -606,6 +607,7 @@ function exportCSV() {
   a.href=url; a.download='אישורי_הגעה.csv'; a.click(); URL.revokeObjectURL(url);
   showToast('הקובץ יורד...');
 }
+
 function showToast(msg) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2600);
