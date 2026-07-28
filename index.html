@@ -65,27 +65,7 @@ tr:last-child td { border-bottom: none; }
 #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--white); padding: 10px 22px; font-family: var(--font-ui); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; z-index: 999; opacity: 0; transition: all 0.3s; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Hebrew Calendar Picker */
-#hebrewPickerOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; }
-#hebrewPickerOverlay.open { display:flex; }
-#hebrewPickerModal { background:var(--white); border:1px solid var(--text); width:min(380px,95vw); max-height:90vh; overflow-y:auto; padding:0; }
-.hpicker-head { background:var(--text); color:var(--white); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; }
-.hpicker-title { font-family:var(--font-deco); font-size:12px; letter-spacing:2px; text-transform:uppercase; }
-.hpicker-close { background:none; border:none; color:var(--white); font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
-.hpicker-nav { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--light-bg); }
-.hpicker-nav button { background:none; border:1px solid var(--border); padding:6px 12px; font-family:var(--font-ui); font-size:12px; font-weight:700; cursor:pointer; color:var(--text); }
-.hpicker-nav button:hover { border-color:var(--gold); color:var(--gold); }
-.hpicker-month-label { font-family:var(--font-ui); font-size:14px; font-weight:700; text-align:center; }
-.hpicker-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:12px; }
-.hpicker-dow { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:1px; color:var(--muted); text-align:center; padding:4px 0; }
-.hpicker-day { font-family:var(--font-ui); font-size:12px; text-align:center; padding:8px 4px; cursor:pointer; border:1px solid transparent; transition:all 0.15s; }
-.hpicker-day:hover { border-color:var(--gold); background:var(--light-bg); }
-.hpicker-day.selected { background:var(--text); color:var(--white); }
-.hpicker-day.today { border-color:var(--gold); color:var(--gold); font-weight:700; }
-.hpicker-day.empty { cursor:default; }
-.hpicker-day.empty:hover { border-color:transparent; background:none; }
-.hpicker-selects { display:flex; gap:8px; padding:0 12px 12px; }
-.hpicker-selects select { flex:1; }
+
 .status-bar { margin: 0 16px 16px; padding: 12px 16px; font-family: var(--font-ui); font-size: 12px; display: flex; align-items: center; gap: 8px; }
 .status-bar.ok { background: #f0faf0; border: 1px solid #a8d5a8; color: #2d6a2d; }
 .status-bar.error { background: #fdf0f0; border: 1px solid #d5a8a8; color: #6a2d2d; }
@@ -198,12 +178,9 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <label style="margin-top:14px;">שמות בני הזוג</label>
       <input type="text" id="coupleNames" placeholder="לדוגמה: שרה ודוד כהן" oninput="updatePreview()">
       <label>תאריך עברי</label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="hebrewDate" placeholder="בחרי תאריך לועזי למטה לחישוב אוטומטי, או לחצי לבחירה ידנית" readonly style="cursor:pointer;flex:1;" onclick="openHebrewPicker()">
-        <button type="button" onclick="openHebrewPicker()" style="white-space:nowrap;padding:10px 14px;border:1px solid var(--gold);background:var(--white);font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;color:var(--gold);">לוח עברי</button>
-      </div>
+      <input type="text" id="hebrewDate" placeholder="לדוגמה: כ׳ בתשרי התשפ״ו" oninput="updatePreview()">
       <label>תאריך החתונה (לועזי)</label>
-      <input type="date" id="weddingDate" oninput="onGregorianDateChange()">
+      <input type="date" id="weddingDate" oninput="updatePreview()">
       <label>שעת האירוע</label>
       <input type="text" id="weddingTime" placeholder="לדוגמה: 19:30" oninput="updatePreview()">
       <label>מיקום האירוע</label>
@@ -264,25 +241,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
 <div id="toast"></div>
 
-<!-- Hebrew Calendar Picker Modal -->
-<div id="hebrewPickerOverlay" onclick="closeHebrewPickerIfBg(event)">
-  <div id="hebrewPickerModal">
-    <div class="hpicker-head">
-      <span class="hpicker-title">בחירת תאריך עברי</span>
-      <button class="hpicker-close" onclick="closeHebrewPicker()">✕</button>
-    </div>
-    <div class="hpicker-selects">
-      <select id="hpMonthSel" onchange="hpMonthChanged(this)"></select>
-      <select id="hpYearSel" onchange="hpYearChanged(this)"></select>
-    </div>
-    <div class="hpicker-nav">
-      <button onclick="hpNavMonth(1)">הבא ◄</button>
-      <div class="hpicker-month-label" id="hpMonthLabel"></div>
-      <button onclick="hpNavMonth(-1)">► הקודם</button>
-    </div>
-    <div class="hpicker-grid" id="hpGrid"></div>
-  </div>
-</div>
+
 
 <script>
 let settings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
@@ -647,250 +606,6 @@ function exportCSV() {
   a.href=url; a.download='אישורי_הגעה.csv'; a.click(); URL.revokeObjectURL(url);
   showToast('הקובץ יורד...');
 }
-// ── Hebrew Calendar Engine (browser Intl — 100% accurate) ──────────
-
-// Returns a Date object for 1st day of a given Hebrew month/year
-// by scanning forward from an anchor until Intl reports the right month+year
-function gregDateOfHebrewMonth(hebYear, hebMonth) {
-  // Rough Gregorian anchor: Hebrew year starts ~Sept of (hebYear - 3761)
-  const gregYear = hebYear - 3761;
-  // Start from Jan of that year and scan forward
-  let d = new Date(gregYear, 0, 1);
-  for (let tries = 0; tries < 400; tries++) {
-    const p = getHebrewParts(d);
-    if (p.year === hebYear && p.month === hebMonth && p.day === 1) return d;
-    // Advance: if we're past the target month in this year, jump ahead ~20 days
-    if (p.year > hebYear || (p.year === hebYear && p.month > hebMonth)) {
-      d = new Date(d.getTime() - 25 * 86400000);
-    } else {
-      d = new Date(d.getTime() + 1 * 86400000);
-    }
-  }
-  return null;
-}
-
-const _hebFmt = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
-  year: 'numeric', month: 'long', day: 'numeric'
-});
-const _hebFmtParts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
-  year: 'numeric', month: 'numeric', day: 'numeric'
-});
-
-function getHebrewParts(date) {
-  const parts = _hebFmtParts.formatToParts(date);
-  const get = t => parseInt(parts.find(p => p.type === t)?.value || '0');
-  return { year: get('year'), month: get('month'), day: get('day') };
-}
-
-function getHebrewMonthName(date) {
-  const parts = _hebFmt.formatToParts(date);
-  return parts.find(p => p.type === 'month')?.value || '';
-}
-
-function gregorianToHebrewStr(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  // Use noon to avoid timezone issues
-  const date = new Date(y, m - 1, d, 12, 0, 0);
-  return _hebFmt.format(date);
-}
-
-// ── Hebrew Picker UI ────────────────────────────────────────────────
-// hpYear/hpMonth are Hebrew year and month (1-based)
-let hpYear = 0, hpMonth = 1;
-
-// Get all months in a Hebrew year by scanning through it
-function getHebrewMonthsInYear(hebYear) {
-  const months = [];
-  // Start from ~Tishrei: Sept of (hebYear - 3761)
-  let d = new Date(hebYear - 3761, 7, 1); // Aug 1
-  let seen = new Set();
-  for (let i = 0; i < 400; i++) {
-    const p = getHebrewParts(d);
-    if (p.year === hebYear) {
-      const key = p.month;
-      if (!seen.has(key)) {
-        seen.add(key);
-        months.push({ num: p.month, name: getHebrewMonthName(d) });
-      }
-    } else if (p.year > hebYear) break;
-    d = new Date(d.getTime() + 86400000);
-  }
-  // Sort by month number
-  months.sort((a, b) => a.num - b.num);
-  return months;
-}
-
-// Count days in a Hebrew month
-function hebrewDaysInMonth(hebYear, hebMonth) {
-  let count = 0;
-  const anchor = gregDateOfHebrewMonth(hebYear, hebMonth);
-  if (!anchor) return 30;
-  let d = new Date(anchor);
-  for (let i = 0; i < 31; i++) {
-    const p = getHebrewParts(d);
-    if (p.year === hebYear && p.month === hebMonth) count++;
-    else if (count > 0) break;
-    d = new Date(d.getTime() + 86400000);
-  }
-  return count;
-}
-
-function openHebrewPicker() {
-  const wdVal = document.getElementById('weddingDate').value;
-  let refDate;
-  if (wdVal) {
-    const [y,m,d] = wdVal.split('-').map(Number);
-    refDate = new Date(y, m-1, d, 12, 0, 0);
-  } else {
-    refDate = new Date();
-  }
-  const p = getHebrewParts(refDate);
-  hpYear = p.year; hpMonth = p.month;
-  buildAndRenderCal();
-  document.getElementById('hebrewPickerOverlay').classList.add('open');
-}
-function closeHebrewPicker() {
-  document.getElementById('hebrewPickerOverlay').classList.remove('open');
-}
-function closeHebrewPickerIfBg(e) {
-  if (e.target === document.getElementById('hebrewPickerOverlay')) closeHebrewPicker();
-}
-
-function getHebrewYearLabel(hebYear) {
-  // Get the Hebrew letter notation (e.g. התשפ"ה) from Intl
-  const gregYear = hebYear - 3761;
-  for (let mo = 7; mo <= 11; mo++) {
-    const d = new Date(gregYear, mo, 1, 12, 0, 0);
-    const p = getHebrewParts(d);
-    if (p.year === hebYear) {
-      const letterYear = _hebFmt.formatToParts(d).find(pt => pt.type === "year")?.value;
-      if (letterYear) return `${letterYear} (${hebYear})`;
-      break;
-    }
-  }
-  return String(hebYear);
-}
-
-function buildAndRenderCal() {
-  const mSel = document.getElementById("hpMonthSel");
-  const ySel = document.getElementById("hpYearSel");
-
-  // Build year select
-  ySel.innerHTML = "";
-  for (let y = 5783; y <= 5800; y++) {
-    const label = getHebrewYearLabel(y);
-    ySel.innerHTML += `<option value="${y}" ${y === hpYear ? "selected" : ""}>${label} (${y})</option>`;
-  }
-
-  // Build month select
-  const months = getHebrewMonthsInYear(hpYear);
-  mSel.innerHTML = months.map(mn =>
-    `<option value="${mn.num}" ${mn.num === hpMonth ? "selected" : ""}>${mn.name}</option>`
-  ).join("");
-
-  const curMonthObj = months.find(m => m.num === hpMonth) || months[0];
-  document.getElementById("hpMonthLabel").textContent =
-    (curMonthObj?.name || "") + " " + getHebrewYearLabel(hpYear);
-
-  const firstGreg = gregDateOfHebrewMonth(hpYear, hpMonth);
-  if (!firstGreg) {
-    document.getElementById("hpGrid").innerHTML = '<div style="padding:16px;text-align:center;">שגיאה</div>';
-    return;
-  }
-
-  const dim = hebrewDaysInMonth(hpYear, hpMonth);
-  const dow = firstGreg.getDay();
-
-  const DOW_LABELS = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
-  let html = DOW_LABELS.map(l => `<div class="hpicker-dow">${l}</div>`).join("");
-
-  const curHebStr = document.getElementById("hebrewDate").value;
-  for (let i = 0; i < dow; i++) html += '<div class="hpicker-day empty"></div>';
-  for (let day = 1; day <= dim; day++) {
-    const greg     = new Date(firstGreg.getTime() + (day - 1) * 86400000);
-    const dayLabel = _hebFmt.formatToParts(greg).find(p => p.type === "day")?.value || String(day);
-    const fullStr  = _hebFmt.format(greg);
-    const isSel    = curHebStr === fullStr;
-    html += `<div class="hpicker-day${isSel ? ' selected' : ''}" onclick="pickHebrewDay(${day})">${dayLabel}</div>`;
-  }
-  document.getElementById("hpGrid").innerHTML = html;
-}
-
-function buildHebrewSelects() { buildAndRenderCal(); }
-function renderHebrewCal()    { buildAndRenderCal(); }
-
-function hpMonthChanged(sel) {
-  hpMonth = Number(sel.value);
-  renderCalOnly();
-}
-function hpYearChanged(sel) {
-  hpYear = Number(sel.value);
-  // make sure current month exists in new year
-  const months = getHebrewMonthsInYear(hpYear);
-  if (!months.find(m => m.num === hpMonth)) hpMonth = months[0].num;
-  // rebuild both selects (year didn't change so month select needs refresh for leap year)
-  buildAndRenderCal();
-}
-
-// Renders only the grid and month-label, without touching the selects
-function renderCalOnly() {
-  const months = getHebrewMonthsInYear(hpYear);
-  const curMonthObj = months.find(m => m.num === hpMonth) || months[0];
-  document.getElementById("hpMonthLabel").textContent =
-    (curMonthObj?.name || "") + " " + getHebrewYearLabel(hpYear);
-
-  const firstGreg = gregDateOfHebrewMonth(hpYear, hpMonth);
-  if (!firstGreg) {
-    document.getElementById("hpGrid").innerHTML = '<div style="padding:16px;text-align:center;">שגיאה</div>';
-    return;
-  }
-  const dim = hebrewDaysInMonth(hpYear, hpMonth);
-  const dow = firstGreg.getDay();
-  const DOW_LABELS = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
-  let html = DOW_LABELS.map(l => `<div class="hpicker-dow">${l}</div>`).join("");
-  const curHebStr = document.getElementById("hebrewDate").value;
-  for (let i = 0; i < dow; i++) html += '<div class="hpicker-day empty"></div>';
-  for (let day = 1; day <= dim; day++) {
-    const greg     = new Date(firstGreg.getTime() + (day - 1) * 86400000);
-    const dayLabel = _hebFmt.formatToParts(greg).find(p => p.type === "day")?.value || String(day);
-    const fullStr  = _hebFmt.format(greg);
-    const isSel    = curHebStr === fullStr;
-    html += `<div class="hpicker-day${isSel ? ' selected' : ''}" onclick="pickHebrewDay(${day})">${dayLabel}</div>`;
-  }
-  document.getElementById("hpGrid").innerHTML = html;
-}
-
-function hpNavMonth(delta) {
-  const months = getHebrewMonthsInYear(hpYear);
-  const idx    = months.findIndex(m => m.num === hpMonth);
-  const newIdx = idx + delta;
-  if (newIdx >= months.length) { hpYear++; hpMonth = getHebrewMonthsInYear(hpYear)[0].num; }
-  else if (newIdx < 0)         { hpYear--; const ms = getHebrewMonthsInYear(hpYear); hpMonth = ms[ms.length-1].num; }
-  else                         { hpMonth = months[newIdx].num; }
-  buildAndRenderCal();
-}
-
-function pickHebrewDay(day) {
-  const firstGreg = gregDateOfHebrewMonth(hpYear, hpMonth);
-  if (!firstGreg) return;
-  const greg = new Date(firstGreg.getTime() + (day - 1) * 86400000);
-  const str  = _hebFmt.format(greg);
-  document.getElementById('hebrewDate').value = str;
-  closeHebrewPicker();
-  updatePreview();
-}
-
-// Auto-fill Hebrew date when Gregorian date changes
-function onGregorianDateChange() {
-  const val = document.getElementById('weddingDate').value;
-  if (val) {
-    const str = gregorianToHebrewStr(val);
-    if (str) document.getElementById('hebrewDate').value = str;
-  }
-  updatePreview();
-}
-
 function showToast(msg) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2600);
