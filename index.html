@@ -404,6 +404,12 @@ function showGuestPage() {
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
   const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
+
+  // Already responded on this device — show the thank-you screen instead of a fresh form
+  const already = localStorage.getItem('myRsvpResponse');
+  if (already) {
+    try { showResultScreen(JSON.parse(already).status); } catch(e) {}
+  }
 }
 
 function selectChoice(choice, btn) {
@@ -413,6 +419,25 @@ function selectChoice(choice, btn) {
 }
 function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.wazeLink) window.open(s.wazeLink,'_blank'); }
 function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink) window.open(s.bitLink,'_blank'); else if(s.bitPhone) window.open('https://pay.bit.digital/'+s.bitPhone.replace(/-/g,''),'_blank'); }
+
+function showResultScreen(status) {
+  document.getElementById('rsvpFormCard').style.display = 'none';
+  document.getElementById('rsvpResult').style.display = 'block';
+  if (status === 'couple') {
+    document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
+    document.getElementById('resultMsg').textContent = 'שמחים שתגיעו לאירוע שלנו!';
+  } else if (status === 'solo') {
+    document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
+    document.getElementById('resultMsg').textContent = 'שמחים שתגיע/י לאירוע שלנו!';
+  } else {
+    document.getElementById('resultTitle').textContent = 'זה בסדר, תודה!';
+    document.getElementById('resultMsg').textContent = 'חבל שלא תוכלו להגיע — נשמח לחגוג יחד בפעם אחרת!';
+  }
+  const sSettings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  if (sSettings.bitLink || sSettings.bitPhone) {
+    document.getElementById('bitResultSection').style.display = 'block';
+  }
+}
 
 async function submitRSVP() {
   const name = document.getElementById('guestName').value.trim();
@@ -424,6 +449,7 @@ async function submitRSVP() {
   const timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
   const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, time: timeStr };
 
+  document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitBtn').style.display = 'none';
   document.getElementById('sendingMsg').style.display = 'block';
 
@@ -442,22 +468,10 @@ async function submitRSVP() {
   list.push(entry);
   localStorage.setItem('weddingResponses', JSON.stringify(list));
 
-  document.getElementById('rsvpFormCard').style.display = 'none';
-  document.getElementById('rsvpResult').style.display = 'block';
-  if (selectedChoice === 'couple') {
-    document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
-    document.getElementById('resultMsg').textContent = 'שמחים שתגיעו לאירוע שלנו!';
-  } else if (selectedChoice === 'solo') {
-    document.getElementById('resultTitle').textContent = 'מעולה! תודה רבה!';
-    document.getElementById('resultMsg').textContent = 'שמחים שתגיע/י לאירוע שלנו!';
-  } else {
-    document.getElementById('resultTitle').textContent = 'זה בסדר, תודה!';
-    document.getElementById('resultMsg').textContent = 'חבל שלא תוכלו להגיע — נשמח לחגוג יחד בפעם אחרת!';
-  }
-  const sSettings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (sSettings.bitLink || sSettings.bitPhone) {
-    document.getElementById('bitResultSection').style.display = 'block';
-  }
+  // Remember on this device so reopening the same link doesn't submit again
+  localStorage.setItem('myRsvpResponse', JSON.stringify(entry));
+
+  showResultScreen(selectedChoice);
 }
 
 // Load from Google Sheets
@@ -516,9 +530,13 @@ function renderResponsesTable() {
 
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function clearResponses() {
-  if (confirm('למחוק את כל התשובות המקומיות?')) {
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  const msg = s.sheetUrl
+    ? 'פעולה זו מוחקת רק את התצוגה המקומית במחשב הזה. התשובות עדיין קיימות בגיליון ה-Google Sheets, ולכן הן יחזרו להופיע בסנכרון הבא (או בפתיחת הכרטיסייה מחדש) — אלא אם תמחקי את השורות גם בגיליון עצמו. להמשיך?'
+    : 'למחוק את כל התשובות המקומיות?';
+  if (confirm(msg)) {
     localStorage.removeItem('weddingResponses'); responses = [];
-    renderResponsesTable(); showToast('התשובות נמחקו');
+    renderResponsesTable(); showToast('התשובות נמחקו מהתצוגה המקומית');
   }
 }
 function exportCSV() {
