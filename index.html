@@ -124,7 +124,6 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   <div class="rsvp-submit-result" id="rsvpResult">
     <h2 id="resultTitle">תודה!</h2>
     <p id="resultMsg">האישור שלך התקבל.</p>
-    <p id="deadlineNote" style="display:none; font-family:var(--font-ui); font-size:12px; letter-spacing:0.5px; color:var(--muted); margin-top:14px;"></p>
     <div id="bitResultSection" style="display:none; margin-top:28px;">
       <hr class="gold">
       <p style="font-family:var(--font-ui);font-size:12px;letter-spacing:1px;color:var(--muted);margin:16px 0 10px;">ניתן לשלוח מתנה גם ב-Bit</p>
@@ -456,10 +455,6 @@ async function submitRSVP() {
     document.getElementById('resultMsg').textContent = 'חבל שלא תוכלו להגיע — נשמח לחגוג יחד בפעם אחרת!';
   }
   const sSettings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (sSettings.rsvpDeadline) {
-    document.getElementById('deadlineNote').textContent = 'נא לאשר הגעה עד לתאריך ' + formatDateHebrew(sSettings.rsvpDeadline);
-    document.getElementById('deadlineNote').style.display = 'block';
-  }
   if (sSettings.bitLink || sSettings.bitPhone) {
     document.getElementById('bitResultSection').style.display = 'block';
   }
