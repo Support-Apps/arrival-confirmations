@@ -251,6 +251,9 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     <div class="card">
       <div class="card-title">תזכורת למי שטרם אישר הגעה</div>
       <p class="hint-text">המערכת משווה בין רשימת אנשי הקשר לבין התשובות שהתקבלו, ומזהה אוטומטית מי עדיין לא אישר הגעה. אותה שיטת שליחה — כל לחיצה פותחת תזכורת מוכנה לאיש הקשר הבא שטרם אישר.</p>
+      <label style="margin-top:0;">תאריך יעד לשליחת תזכורות</label>
+      <input type="date" id="reminderDate" oninput="saveReminderDate()">
+      <p class="hint-text" style="margin-top:6px;">שימי לב: האפליקציה לא שולחת לבד ביום הזה — התאריך רק מזכיר לך, בזמן שאת לוחצת לשלוח, אם היום המתוכנן כבר הגיע.</p>
       <div class="reminder-stat"><span class="stat-num" id="reminderCount">0</span><br><span class="stat-label">טרם אישרו הגעה</span></div>
       <button class="btn-whatsapp" onclick="sendNextReminder()">שלח תזכורת לאיש הקשר הבא</button>
       <button class="btn-secondary" onclick="resetSentReminders()">אפס סימוני תזכורות שנשלחו</button>
@@ -301,7 +304,7 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'responses') { loadFromSheet(); }
-  if (tab === 'invite') { updateInviteLink(); renderContactsList(); renderReminderStatus(); }
+  if (tab === 'invite') { updateInviteLink(); renderContactsList(); renderReminderStatus(); loadReminderDate(); }
 }
 
 function loadSettings() {
@@ -377,7 +380,7 @@ function resetAll() {
     localStorage.removeItem('weddingResponses');
     localStorage.removeItem('weddingImage');
     settings = {}; responses = [];
-    ['sheetUrl','coupleNames','hebrewDate','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','bitPhone','rsvpDeadline','personalMsg'].forEach(id => {
+    ['sheetUrl','coupleNames','hebrewDate','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','bitPhone','rsvpDeadline','personalMsg','reminderDate'].forEach(id => {
       document.getElementById(id).value = '';
     });
     updatePreview(); renderResponsesTable(); updateSheetStatus();
@@ -576,9 +579,24 @@ function renderReminderStatus() {
 function buildReminderMessage() {
   return 'ראינו שטרם אישרת/ם הגעתך/ם...\nנשמח לדעת אם תגיע/י/ו, תודה רבה!\n\nלאישור הגעה:\n' + getRsvpLink();
 }
+function saveReminderDate() {
+  settings.reminderDate = document.getElementById('reminderDate').value;
+  localStorage.setItem('weddingSettings', JSON.stringify(settings));
+}
+function loadReminderDate() {
+  const el = document.getElementById('reminderDate');
+  if (el && settings.reminderDate) el.value = settings.reminderDate;
+}
 function sendNextReminder() {
   const unconfirmed = getUnconfirmedContacts();
   if (!unconfirmed.length) { showToast('כולם כבר אישרו הגעה 🎉'); return; }
+  if (settings.reminderDate) {
+    const today = new Date().toISOString().slice(0,10);
+    if (today < settings.reminderDate) {
+      const proceed = confirm('התאריך שבחרת לשליחת תזכורות (' + formatDateHebrew(settings.reminderDate) + ') עדיין לא הגיע. לשלוח בכל זאת עכשיו?');
+      if (!proceed) return;
+    }
+  }
   const sentR = JSON.parse(localStorage.getItem('weddingSentReminders') || '{}');
   const next = unconfirmed.find(c => !sentR[c.phone]);
   if (!next) { showToast('התזכורת כבר נשלחה לכל מי שטרם אישר'); return; }
