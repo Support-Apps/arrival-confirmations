@@ -41,6 +41,11 @@ textarea { resize: vertical; min-height: 70px; }
 .btn-danger:hover { background: #c0392b; color: var(--white); }
 .btn-whatsapp { background: #25D366; color: var(--white); border: none; padding: 14px; text-transform: uppercase; letter-spacing: 2px; font-size: 11px; font-weight: 700; font-family: var(--font-ui); cursor: pointer; transition: 0.2s; width: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-whatsapp:hover { background: #1dba56; }
+.btn-whatsapp:disabled { opacity: 0.5; cursor: not-allowed; }
+input[type="file"] { width: 100%; padding: 9px; border: 1px solid var(--border); background: var(--bg); font-family: var(--font-ui); font-size: 12px; color: var(--muted); }
+.hint-text { font-family: var(--font-ui); font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+.reminder-stat { text-align: center; margin-bottom: 14px; }
+.reminder-stat .stat-num { font-size: 28px; }
 .preview-box { background: var(--light-bg); border: 1px solid var(--gold); padding: 16px; font-family: var(--font-ui); font-size: 13px; line-height: 1.9; color: var(--text); white-space: pre-line; word-break: break-word; direction: rtl; text-align: right; }
 .link-box { background: var(--bg); border: 1px solid var(--border); padding: 12px; font-family: var(--font-ui); font-size: 11px; line-height: 1.6; color: var(--muted); word-break: break-all; direction: ltr; text-align: left; }
 .stats-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 16px; }
@@ -220,6 +225,36 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
         שלח בוואטסאפ
       </button>
     </div>
+
+    <div class="card">
+      <div class="card-title">העלאת רשימת אנשי קשר</div>
+      <p class="hint-text">קובץ CSV או טקסט, שורה לכל איש קשר: <strong>שם,טלפון</strong> (לדוגמה: דנה כהן,0501234567). אפשר גם קובץ עם מספרי טלפון בלבד, מספר בכל שורה.</p>
+      <input type="file" id="contactsFile" accept=".csv,.txt" onchange="parseContactsFile(this)">
+      <hr class="gold">
+      <label style="margin-top:0;">הוספת איש קשר בודד</label>
+      <input type="text" id="newContactName" placeholder="שם">
+      <input type="text" id="newContactPhone" placeholder="טלפון (לדוגמה: 0501234567)" style="margin-top:8px;">
+      <button class="btn-secondary" onclick="addContactManually()">הוסף איש קשר</button>
+      <div id="contactsArea" style="margin-top:14px;"><div class="empty-state"><div class="empty-text">לא הועלו אנשי קשר</div></div></div>
+      <div class="actions-row" id="contactsActions" style="display:none;">
+        <button class="btn-danger" onclick="clearContacts()">מחק את כל הרשימה</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">שליחת הזמנות לפי הרשימה</div>
+      <p class="hint-text">בוואטסאפ אי אפשר לשלוח הודעות לגמרי אוטומטית ללא אישור בכל פעם (כך וואטסאפ מונעת ספאם). הכפתור פותח את ההזמנה מוכנה לאיש הקשר הבא בתור עם מספרו — צריך רק ללחוץ "שלח" בתוך וואטסאפ עצמו, ואז ללחוץ שוב כאן כדי לעבור לבא בתור.</p>
+      <button class="btn-whatsapp" onclick="sendNextInvite()">שלח לאיש הקשר הבא בתור</button>
+      <button class="btn-secondary" onclick="resetSentInvites()">אפס סימוני "נשלח"</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">תזכורת למי שטרם אישר הגעה</div>
+      <p class="hint-text">המערכת משווה בין רשימת אנשי הקשר לבין התשובות שהתקבלו, ומזהה אוטומטית מי עדיין לא אישר הגעה. אותה שיטת שליחה — כל לחיצה פותחת תזכורת מוכנה לאיש הקשר הבא שטרם אישר.</p>
+      <div class="reminder-stat"><span class="stat-num" id="reminderCount">0</span><br><span class="stat-label">טרם אישרו הגעה</span></div>
+      <button class="btn-whatsapp" onclick="sendNextReminder()">שלח תזכורת לאיש הקשר הבא</button>
+      <button class="btn-secondary" onclick="resetSentReminders()">אפס סימוני תזכורות שנשלחו</button>
+    </div>
   </div>
 
   <!-- RESPONSES TAB -->
@@ -266,7 +301,7 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'responses') { loadFromSheet(); }
-  if (tab === 'invite') updateInviteLink();
+  if (tab === 'invite') { updateInviteLink(); renderContactsList(); renderReminderStatus(); }
 }
 
 function loadSettings() {
@@ -400,6 +435,165 @@ function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => sh
 function sendWhatsApp() {
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
   window.open('https://wa.me/?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
+}
+
+// CONTACTS UPLOAD
+function normalizePhone(raw) {
+  let p = String(raw || '').replace(/[^\d+]/g, '');
+  if (!p) return '';
+  if (p.startsWith('+')) p = p.slice(1);
+  if (p.startsWith('0')) p = '972' + p.slice(1);
+  else if (!p.startsWith('972') && p.length === 9) p = '972' + p;
+  return /^\d{10,13}$/.test(p) ? p : '';
+}
+function last9(phone) { return String(phone || '').replace(/\D/g, '').slice(-9); }
+
+function parseContactsFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const lines = String(e.target.result).split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+    const contacts = [];
+    const seen = new Set();
+    lines.forEach(line => {
+      const parts = line.split(/[,\t]/).map(p => p.trim().replace(/^["']|["']$/g, ''));
+      let name = '', phoneRaw = '';
+      if (parts.length >= 2) {
+        const looksPhone = s => /^[\d+][\d\s\-()]{5,}$/.test(s);
+        if (looksPhone(parts[0]) && !looksPhone(parts[1])) { phoneRaw = parts[0]; name = parts[1]; }
+        else { name = parts[0]; phoneRaw = parts[1]; }
+      } else {
+        phoneRaw = parts[0];
+      }
+      const phone = normalizePhone(phoneRaw);
+      if (phone && !seen.has(phone)) { seen.add(phone); contacts.push({ name: name || phone, phone }); }
+    });
+    if (!contacts.length) { showToast('לא נמצאו מספרי טלפון תקינים בקובץ'); return; }
+    localStorage.setItem('weddingContacts', JSON.stringify(contacts));
+    localStorage.removeItem('weddingSentInvites');
+    localStorage.removeItem('weddingSentReminders');
+    renderContactsList();
+    renderReminderStatus();
+    showToast('נטענו ' + contacts.length + ' אנשי קשר');
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function addContactManually() {
+  const nameInput = document.getElementById('newContactName');
+  const phoneInput = document.getElementById('newContactPhone');
+  const name = nameInput.value.trim();
+  const phone = normalizePhone(phoneInput.value);
+  if (!phone) { showToast('מספר הטלפון לא תקין'); return; }
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  if (contacts.some(c => c.phone === phone)) { showToast('איש הקשר כבר קיים ברשימה'); return; }
+  contacts.push({ name: name || phone, phone });
+  localStorage.setItem('weddingContacts', JSON.stringify(contacts));
+  nameInput.value = ''; phoneInput.value = '';
+  renderContactsList();
+  renderReminderStatus();
+  showToast('איש הקשר נוסף');
+}
+
+function removeContact(phone) {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]').filter(c => c.phone !== phone);
+  localStorage.setItem('weddingContacts', JSON.stringify(contacts));
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}'); delete sent[phone];
+  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+  const sentR = JSON.parse(localStorage.getItem('weddingSentReminders') || '{}'); delete sentR[phone];
+  localStorage.setItem('weddingSentReminders', JSON.stringify(sentR));
+  renderContactsList();
+  renderReminderStatus();
+}
+
+function renderContactsList() {
+  const area = document.getElementById('contactsArea');
+  const actions = document.getElementById('contactsActions');
+  if (!area) return;
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  if (!contacts.length) {
+    area.innerHTML = '<div class="empty-state"><div class="empty-text">לא הועלו אנשי קשר</div></div>';
+    actions.style.display = 'none';
+    return;
+  }
+  actions.style.display = 'flex';
+  let html = '<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th></th></tr></thead><tbody>';
+  contacts.forEach((c, i) => {
+    html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone)}</td><td>${sent[c.phone] ? '<span class="badge badge-couple">נשלח</span>' : '<span class="badge badge-no">טרם נשלח</span>'}</td><td><button class="btn-danger" style="margin:0;padding:4px 8px;font-size:10px;width:auto;" onclick="removeContact('${c.phone}')">מחק</button></td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+function clearContacts() {
+  if (confirm('למחוק את כל רשימת אנשי הקשר שהועלתה?')) {
+    localStorage.removeItem('weddingContacts');
+    localStorage.removeItem('weddingSentInvites');
+    localStorage.removeItem('weddingSentReminders');
+    renderContactsList();
+    renderReminderStatus();
+    showToast('הרשימה נמחקה');
+  }
+}
+
+// GUIDED WHATSAPP SEND (one contact at a time — WhatsApp requires a manual tap to actually send)
+function sendNextInvite() {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  if (!contacts.length) { showToast('העלי קודם רשימת אנשי קשר'); return; }
+  if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  const next = contacts.find(c => !sent[c.phone]);
+  if (!next) { showToast('ההזמנה כבר נשלחה לכל הרשימה'); return; }
+  window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
+  sent[next.phone] = Date.now();
+  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+  renderContactsList();
+  showToast('נפתחה הזמנה ל-' + next.name + ' — לחצי "שלח" בוואטסאפ');
+}
+function resetSentInvites() {
+  if (confirm('לאפס את סימוני "נשלח" עבור כל אנשי הקשר?')) {
+    localStorage.removeItem('weddingSentInvites');
+    renderContactsList();
+    showToast('הסימונים אופסו');
+  }
+}
+
+// REMINDERS FOR NON-RESPONDERS
+function getUnconfirmedContacts() {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const responded = new Set(responses.map(r => last9(r.phone)).filter(Boolean));
+  return contacts.filter(c => !responded.has(last9(c.phone)));
+}
+function renderReminderStatus() {
+  const el = document.getElementById('reminderCount');
+  if (!el) return;
+  el.textContent = getUnconfirmedContacts().length;
+}
+function buildReminderMessage() {
+  return 'ראינו שטרם אישרת/ם הגעתך/ם...\nנשמח לדעת אם תגיע/י/ו, תודה רבה!\n\nלאישור הגעה:\n' + getRsvpLink();
+}
+function sendNextReminder() {
+  const unconfirmed = getUnconfirmedContacts();
+  if (!unconfirmed.length) { showToast('כולם כבר אישרו הגעה 🎉'); return; }
+  const sentR = JSON.parse(localStorage.getItem('weddingSentReminders') || '{}');
+  const next = unconfirmed.find(c => !sentR[c.phone]);
+  if (!next) { showToast('התזכורת כבר נשלחה לכל מי שטרם אישר'); return; }
+  window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildReminderMessage()), '_blank');
+  sentR[next.phone] = Date.now();
+  localStorage.setItem('weddingSentReminders', JSON.stringify(sentR));
+  renderReminderStatus();
+  showToast('נפתחה תזכורת ל-' + next.name + ' — לחצי "שלח" בוואטסאפ');
+}
+function resetSentReminders() {
+  if (confirm('לאפס את סימוני התזכורות שנשלחו?')) {
+    localStorage.removeItem('weddingSentReminders');
+    renderReminderStatus();
+    showToast('הסימונים אופסו');
+  }
 }
 
 // IMAGE
