@@ -441,22 +441,7 @@ function updatePreview() {
     (waze ? '\n\nניווט לאולם: ' + waze : '');
 }
 
-function getRsvpLink() {
-  // Encode all settings into the link so guests on other devices get full context
-  const cfg = JSON.stringify({
-    s:  settings.sheetUrl       || '',
-    c:  settings.coupleNames    || '',
-    d:  settings.weddingDate    || '',
-    t:  settings.weddingTime    || '',
-    l:  settings.weddingLocation|| '',
-    w:  settings.wazeLink       || '',
-    b:  settings.bitPhone       || '',
-    bl: settings.bitLink        || '',
-    hd: settings.hebrewDate     || ''
-  });
-  const encoded = btoa(unescape(encodeURIComponent(cfg)));
-  return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1&cfg=' + encoded;
-}
+function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 
@@ -692,18 +677,7 @@ function showGuestPage() {
 
   // Decode settings from URL param (set by admin when generating the link)
   // This makes the form work on any guest device, not just the admin's device
-  const urlParams = new URLSearchParams(window.location.search);
-  const cfgParam = urlParams.get('cfg');
-  let s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (cfgParam) {
-    try {
-      const decoded = JSON.parse(decodeURIComponent(escape(atob(cfgParam))));
-      s = { sheetUrl: decoded.s, coupleNames: decoded.c, weddingDate: decoded.d,
-            weddingTime: decoded.t, weddingLocation: decoded.l, wazeLink: decoded.w,
-            bitPhone: decoded.b, bitLink: decoded.bl, hebrewDate: decoded.hd };
-      settings = s; // update global so submitRSVP can use it
-    } catch(e) {}
-  }
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
 
   if (s.coupleNames) document.getElementById('rsvpCouple').textContent = s.coupleNames;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
@@ -790,7 +764,7 @@ async function submitRSVP() {
   // Send to Google Sheets via hidden form → hidden iframe
   // This is the most reliable method: bypasses all CORS restrictions and follows
   // Google's cross-domain redirects exactly as a normal browser navigation would.
-  const sheetUrl = settings.sheetUrl || s.sheetUrl;
+  const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
   if (sheetUrl) {
     try {
       const statusLabel = selectedChoice==='couple' ? 'מגיע/ה עם בן/בת זוג' : selectedChoice==='solo' ? 'מגיע/ה לבד' : selectedChoice==='more' ? 'קבוצה' : 'לא מגיע/ה';
@@ -826,10 +800,10 @@ async function submitRSVP() {
 // Load from Google Sheets
 async function loadFromSheet() {
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  if (!s.sheetUrl) { renderResponsesTable(); return; }
+  const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
   showToast('טוען נתונים...');
   try {
-    const res = await fetch(s.sheetUrl + '?action=get');
+    const res = await fetch(sheetUrl + '?action=get');
     const data = await res.json();
     if (Array.isArray(data)) {
       responses = data.map(r => ({ name: String(r.name||''), phone: String(r.phone||''), status: String(r.statusKey||r.status||''), time: String(r.time||'') }));
