@@ -150,6 +150,24 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="btn-secondary" onclick="openBit()">שלח מתנה ב-Bit</button>
     </div>
   </div>
+
+  <!-- DUPLICATE DETECTED DIALOG -->
+  <div id="duplicateDialog" style="position:fixed; inset:0; background:rgba(28,28,26,0.55); z-index:500; display:none; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--white); border:1px solid var(--text); padding:28px 22px; max-width:360px; width:100%; direction:rtl; text-align:right;">
+      <div style="font-family:var(--font-deco);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">אישור קיים</div>
+      <p style="font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;" id="dupMsgName"></p>
+      <p style="font-family:var(--font-ui);font-size:13px;color:var(--muted);margin-bottom:20px;" id="dupMsgDetail"></p>
+      <div style="font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">עדכון מספר אורחים</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <button onclick="dupChangeCount(-1)" style="width:40px;height:40px;border:1px solid var(--gold);background:var(--white);font-size:20px;cursor:pointer;color:var(--text);font-family:var(--font-ui);">−</button>
+        <input type="number" id="dupGuestCount" min="0" max="50" value="2" style="width:70px;text-align:center;font-size:18px;font-weight:700;border:1px solid var(--gold);padding:8px;background:var(--white);font-family:var(--font-head);">
+        <button onclick="dupChangeCount(1)" style="width:40px;height:40px;border:1px solid var(--gold);background:var(--white);font-size:20px;cursor:pointer;color:var(--text);font-family:var(--font-ui);">+</button>
+        <span style="font-family:var(--font-ui);font-size:13px;color:var(--muted);">אורחים</span>
+      </div>
+      <button class="btn-action" onclick="confirmDupUpdate()">עדכן הזמנה</button>
+      <button class="btn-secondary" onclick="closeDupDialog()" style="margin-top:8px;">ביטול</button>
+    </div>
+  </div>
 </div>
 
 <!-- ADMIN APP -->
@@ -746,6 +764,9 @@ function showResultScreen(status) {
   }
 }
 
+// Pending entry held while duplicate dialog is open
+let _pendingEntry = null;
+
 async function submitRSVP() {
   const name = document.getElementById('guestName').value.trim();
   if (!name) { showToast('נא להזין שם'); return; }
@@ -757,44 +778,109 @@ async function submitRSVP() {
   const customCount = selectedChoice === 'more' ? (parseInt(document.getElementById('customGuestCount').value) || 3) : null;
   const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, count: customCount, time: timeStr };
 
+  // --- Duplicate check ---
+  const phone9 = entry.phone ? entry.phone.replace(/\D/g,'').slice(-9) : '';
+  if (phone9) {
+    // Check locally first (fast), then remotely
+    const localList = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+    let existingEntry = localList.find(r => r.phone && r.phone.replace(/\D/g,'').slice(-9) === phone9);
+
+    if (!existingEntry) {
+      // Try to fetch from sheet to catch registrations from other devices
+      const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
+      try {
+        const res = await fetch(sheetUrl + '?action=get');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          existingEntry = data.find(r => r.phone && String(r.phone).replace(/\D/g,'').slice(-9) === phone9);
+        }
+      } catch(e) { /* network fail — skip remote check, proceed */ }
+    }
+
+    if (existingEntry) {
+      // Show duplicate dialog instead of submitting
+      _pendingEntry = entry;
+      const statusLabel = existingEntry.status || existingEntry.statusKey || '';
+      const existingCount = existingEntry.count || (statusLabel.includes('זוג') ? 2 : statusLabel.includes('קבוצה') ? 3 : 1);
+      document.getElementById('dupMsgName').textContent = 'שלום ' + (existingEntry.name || name) + ' 👋';
+      document.getElementById('dupMsgDetail').textContent = 'כבר אישרת הגעה עם ' + existingCount + ' אורחים. האם תרצה/י לעדכן את מספר האורחים?';
+      document.getElementById('dupGuestCount').value = existingCount;
+      document.getElementById('duplicateDialog').style.display = 'flex';
+      return;
+    }
+  }
+  // --- No duplicate — proceed normally ---
+  await _doSendRSVP(entry, false);
+}
+
+function dupChangeCount(delta) {
+  const inp = document.getElementById('dupGuestCount');
+  inp.value = Math.max(0, Math.min(50, (parseInt(inp.value) || 1) + delta));
+}
+
+function closeDupDialog() {
+  document.getElementById('duplicateDialog').style.display = 'none';
+  _pendingEntry = null;
+}
+
+async function confirmDupUpdate() {
+  if (!_pendingEntry) return;
+  const newCount = parseInt(document.getElementById('dupGuestCount').value) || 1;
+  // Derive status from new count
+  let updatedStatus, updatedCount;
+  if (newCount === 0) { updatedStatus = 'not-coming'; updatedCount = 0; }
+  else if (newCount === 1) { updatedStatus = 'solo'; updatedCount = 1; }
+  else if (newCount === 2) { updatedStatus = 'couple'; updatedCount = 2; }
+  else { updatedStatus = 'more'; updatedCount = newCount; }
+
+  const now = new Date();
+  const timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+  const updatedEntry = { ..._pendingEntry, status: updatedStatus, count: updatedCount, time: timeStr };
+
+  document.getElementById('duplicateDialog').style.display = 'none';
+  _pendingEntry = null;
+
+  await _doSendRSVP(updatedEntry, true);
+}
+
+async function _doSendRSVP(entry, isUpdate) {
   document.getElementById('submitBtn').disabled = true;
   document.getElementById('submitBtn').style.display = 'none';
   document.getElementById('sendingMsg').style.display = 'block';
 
-  // Send to Google Sheets via hidden form → hidden iframe
-  // This is the most reliable method: bypasses all CORS restrictions and follows
-  // Google's cross-domain redirects exactly as a normal browser navigation would.
   const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
-  if (sheetUrl) {
-    try {
-      const statusLabel = selectedChoice==='couple' ? 'מגיע/ה עם בן/בת זוג' : selectedChoice==='solo' ? 'מגיע/ה לבד' : selectedChoice==='more' ? 'קבוצה' : 'לא מגיע/ה';
-      const count = selectedChoice==='couple' ? 2 : selectedChoice==='solo' ? 1 : selectedChoice==='more' ? (entry.count||3) : 0;
-      await new Promise(resolve => {
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = sheetUrl;
-        form.target = 'gas_target';
-        form.style.display = 'none';
-        const fields = { name: entry.name, phone: entry.phone || '', status: statusLabel, count: String(count), time: timeStr };
-        Object.entries(fields).forEach(([k, v]) => {
-          const inp = document.createElement('input');
-          inp.type = 'hidden'; inp.name = k; inp.value = v;
-          form.appendChild(inp);
-        });
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-        setTimeout(resolve, 3000); // wait 3s for the script to run
-      });
-    } catch(e) { /* silent fallback */ }
-  }
+  const statusLabel = entry.status==='couple' ? 'מגיע/ה עם בן/בת זוג' : entry.status==='solo' ? 'מגיע/ה לבד' : entry.status==='more' ? 'קבוצה' : 'לא מגיע/ה';
+  const count = entry.status==='couple' ? 2 : entry.status==='solo' ? 1 : entry.status==='more' ? (entry.count||3) : 0;
 
-  // Also save locally as backup
+  try {
+    await new Promise(resolve => {
+      const form = document.createElement('form');
+      form.method = 'GET';
+      form.action = sheetUrl;
+      form.target = 'gas_target';
+      form.style.display = 'none';
+      // Pass action=update so Apps Script can overwrite the existing row instead of appending
+      const fields = { action: isUpdate ? 'update' : 'append', name: entry.name, phone: entry.phone || '', status: statusLabel, count: String(count), time: entry.time };
+      Object.entries(fields).forEach(([k, v]) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = k; inp.value = v;
+        form.appendChild(inp);
+      });
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      setTimeout(resolve, 3000);
+    });
+  } catch(e) { /* silent fallback */ }
+
+  // Save/replace locally
   const list = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
-  list.push(entry);
+  const phone9 = entry.phone ? entry.phone.replace(/\D/g,'').slice(-9) : '';
+  const existingIdx = phone9 ? list.findIndex(r => r.phone && r.phone.replace(/\D/g,'').slice(-9) === phone9) : -1;
+  if (existingIdx >= 0) { list[existingIdx] = entry; } else { list.push(entry); }
   localStorage.setItem('weddingResponses', JSON.stringify(list));
 
-  showResultScreen(selectedChoice);
+  showResultScreen(entry.status);
 }
 
 // Load from Google Sheets
