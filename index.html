@@ -311,6 +311,13 @@ let selectedChoice = null;
 window.onload = function() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('rsvp') === '1') {
+    // Inject sheetUrl from URL param into settings so guest page can reach the sheet
+    const su = params.get('su');
+    if (su) {
+      const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+      s.sheetUrl = su;
+      localStorage.setItem('weddingSettings', JSON.stringify(s));
+    }
     showGuestPage();
   } else {
     document.getElementById('adminApp').style.display = 'block';
@@ -459,7 +466,11 @@ function updatePreview() {
     (waze ? '\n\nניווט לאולם: ' + waze : '');
 }
 
-function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
+function getRsvpLink() {
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  const base = 'https://support-apps.github.io/arrival-confirmations/?rsvp=1';
+  return s.sheetUrl ? base + '&su=' + encodeURIComponent(s.sheetUrl) : base;
+}
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 
