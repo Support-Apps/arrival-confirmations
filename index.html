@@ -147,6 +147,9 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <p style="font-family:var(--font-ui);font-size:12px;letter-spacing:1px;color:var(--muted);margin:16px 0 10px;">ניתן לשלוח מתנה גם ב-Bit</p>
       <button class="btn-secondary" onclick="openBit()">שלח מתנה ב-Bit</button>
     </div>
+    <div style="margin-top:32px;">
+      <button class="btn-secondary" onclick="changeRsvp()" style="opacity:0.6;font-size:10px;padding:9px;">רוצה לשנות את התשובה שלך?</button>
+    </div>
   </div>
 </div>
 
@@ -712,7 +715,24 @@ function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings
 function openBit() {
   const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}');
   if (s.bitLink) { window.open(s.bitLink,'_blank'); return; }
-  if (s.bitPhone) { showToast('פתחי את אפליקציית Bit ושלחי למספר: ' + s.bitPhone); }
+  if (s.bitPhone) {
+    const phone = s.bitPhone.replace(/\D/g, '');
+    window.open('https://www.bitpay.co.il/app/pay?phoneNumber=' + phone, '_blank');
+  }
+}
+
+function changeRsvp() {
+  localStorage.removeItem('myRsvpResponse');
+  selectedChoice = null;
+  document.getElementById('guestName').value = '';
+  document.getElementById('guestPhone').value = '';
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('moreGuestsBox').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').style.display = 'block';
+  document.getElementById('sendingMsg').style.display = 'none';
+  document.getElementById('rsvpResult').style.display = 'none';
+  document.getElementById('rsvpFormCard').style.display = 'block';
 }
 
 function showResultScreen(status) {
