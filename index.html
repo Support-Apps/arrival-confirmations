@@ -196,7 +196,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <label>קישור Bit (ניתן להוסיף מאוחר יותר)</label>
       <input type="url" id="bitLink" placeholder="https://app.bit.dev/..." oninput="updatePreview()">
       <label>מספר טלפון לביט (חלופה לקישור)</label>
-      <input type="text" id="bitPhone" placeholder="050-0000000" value="0586345351" oninput="updatePreview()">
+      <input type="text" id="bitPhone" placeholder="050-0000000" oninput="updatePreview()">
       <label>נא לאשר הגעה עד לתאריך (אופציונלי)</label>
       <input type="date" id="rsvpDeadline" oninput="updatePreview()">
       <label>הודעה אישית נוספת (אופציונלי)</label>
@@ -709,7 +709,11 @@ function changeCount(delta) {
   inp.value = Math.max(1, Math.min(50, val + delta));
 }
 function openWaze() { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.wazeLink) window.open(s.wazeLink,'_blank'); }
-function openBit()  { const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}'); if(s.bitLink) window.open(s.bitLink,'_blank'); else if(s.bitPhone) window.open('https://pay.bit.digital/'+s.bitPhone.replace(/-/g,''),'_blank'); }
+function openBit() {
+  const s = JSON.parse(localStorage.getItem('weddingSettings')||'{}');
+  if (s.bitLink) { window.open(s.bitLink,'_blank'); return; }
+  if (s.bitPhone) { showToast('פתחי את אפליקציית Bit ושלחי למספר: ' + s.bitPhone); }
+}
 
 function showResultScreen(status) {
   document.getElementById('rsvpFormCard').style.display = 'none';
@@ -730,6 +734,10 @@ function showResultScreen(status) {
   const sSettings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
   if (sSettings.bitLink || sSettings.bitPhone) {
     document.getElementById('bitResultSection').style.display = 'block';
+    const bitBtn = document.querySelector('#bitResultSection .btn-secondary');
+    if (!sSettings.bitLink && sSettings.bitPhone && bitBtn) {
+      bitBtn.textContent = 'שלחו ב-Bit למספר ' + sSettings.bitPhone;
+    }
   }
 }
 
