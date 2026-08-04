@@ -418,7 +418,7 @@ function buildMessage(link) {
   const deadline    = settings.rsvpDeadline  ? '\n\nנא לאשר הגעה עד לתאריך ' + formatDateHebrew(settings.rsvpDeadline) : '';
   const waze        = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
   const rsvp        = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
-  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + dateLine + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + deadline + waze + rsvp;
+  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + dateLine + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + deadline + rsvp + waze;
 }
 
 function updatePreview() {
