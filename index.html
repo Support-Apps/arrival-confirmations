@@ -775,8 +775,10 @@ async function submitRSVP() {
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
   const now = new Date();
   const timeStr = now.toLocaleDateString('he-IL') + ' ' + now.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
-  const customCount = selectedChoice === 'more' ? (parseInt(document.getElementById('customGuestCount').value) || 3) : null;
-  const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, count: customCount, time: timeStr };
+  const rawCount = selectedChoice === 'more' ? (parseInt(document.getElementById('customGuestCount').value) || 3)
+                 : selectedChoice === 'couple' ? 2
+                 : selectedChoice === 'solo' ? 1 : 0;
+  const entry = { name, phone: document.getElementById('guestPhone').value.trim(), status: selectedChoice, count: rawCount, time: timeStr };
 
   // --- Duplicate check ---
   const phone9 = entry.phone ? entry.phone.replace(/\D/g,'').slice(-9) : '';
@@ -850,7 +852,8 @@ async function _doSendRSVP(entry, isUpdate) {
 
   const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
   const statusLabel = entry.status==='couple' ? 'מגיע/ה עם בן/בת זוג' : entry.status==='solo' ? 'מגיע/ה לבד' : entry.status==='more' ? 'קבוצה' : 'לא מגיע/ה';
-  const count = entry.status==='couple' ? 2 : entry.status==='solo' ? 1 : entry.status==='more' ? (entry.count||3) : 0;
+  // Use entry.count when explicitly set (e.g. after dup-update), fall back to status default
+  const count = (entry.count != null) ? entry.count : (entry.status==='couple' ? 2 : entry.status==='solo' ? 1 : entry.status==='more' ? 3 : 0);
 
   try {
     await new Promise(resolve => {
