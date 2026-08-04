@@ -789,8 +789,9 @@ async function submitRSVP() {
 
     if (!existingEntry) {
       // Try to fetch from sheet to catch registrations from other devices
-      const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
+      const sheetUrl = (JSON.parse(localStorage.getItem('weddingSettings') || '{}')).sheetUrl || '';
       try {
+        if (!sheetUrl) throw new Error('no url');
         const res = await fetch(sheetUrl + '?action=get');
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -850,12 +851,13 @@ async function _doSendRSVP(entry, isUpdate) {
   document.getElementById('submitBtn').style.display = 'none';
   document.getElementById('sendingMsg').style.display = 'block';
 
-  const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
+  const sheetUrl = (JSON.parse(localStorage.getItem('weddingSettings') || '{}')).sheetUrl || '';
   const statusLabel = entry.status==='couple' ? 'מגיע/ה עם בן/בת זוג' : entry.status==='solo' ? 'מגיע/ה לבד' : entry.status==='more' ? 'קבוצה' : 'לא מגיע/ה';
   // Use entry.count when explicitly set (e.g. after dup-update), fall back to status default
   const count = (entry.count != null) ? entry.count : (entry.status==='couple' ? 2 : entry.status==='solo' ? 1 : entry.status==='more' ? 3 : 0);
 
   try {
+    if (!sheetUrl) throw new Error('no url');
     await new Promise(resolve => {
       const form = document.createElement('form');
       form.method = 'GET';
