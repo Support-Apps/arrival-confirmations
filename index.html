@@ -105,7 +105,6 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     <div class="logo">אישור הגעה</div>
     <div class="gold-line"></div>
     <div class="couple" id="rsvpCouple"></div>
-    <div class="event-info" id="rsvpInfo"></div>
   </div>
 
   <div id="guestImageWrap" style="display:none; margin:16px 16px 0;">
@@ -468,6 +467,32 @@ function getRsvpLink() {
 }
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
+
+async function shortenLink() {
+  const longUrl = getRsvpLink();
+  const btn = document.getElementById('shortenBtn');
+  const box = document.getElementById('shortLinkBox');
+  btn.disabled = true;
+  btn.textContent = 'מקצר...';
+  try {
+    const res = await fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl));
+    if (!res.ok) throw new Error('שגיאה');
+    const short = await res.text();
+    if (!short.startsWith('http')) throw new Error('תשובה לא תקינה');
+    box.textContent = short;
+    showToast('הקישור הקצר מוכן!');
+  } catch(e) {
+    showToast('לא ניתן לקצר — בדקי חיבור לאינטרנט');
+  }
+  btn.disabled = false;
+  btn.textContent = '✂ צור קישור קצר';
+}
+
+function copyShortLink() {
+  const txt = document.getElementById('shortLinkBox').textContent;
+  if (!txt || txt === 'לחצי "צור קישור קצר"') { showToast('צרי קישור קצר תחילה'); return; }
+  navigator.clipboard.writeText(txt).then(() => showToast('הקישור הקצר הועתק'));
+}
 function sendWhatsApp() {
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
   window.open('https://wa.me/?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
@@ -712,10 +737,6 @@ function showGuestPage() {
   }
 
   if (s.coupleNames) document.getElementById('rsvpCouple').textContent = s.coupleNames;
-  let info = '';
-  if (s.weddingDate) info += formatDateHebrew(s.weddingDate) + (s.weddingTime ? '  |  שעה ' + s.weddingTime : '') + '\n';
-  if (s.weddingLocation) info += s.weddingLocation;
-  document.getElementById('rsvpInfo').textContent = info;
   if (s.wazeLink) document.getElementById('wazeSection').style.display = 'block';
   const img = 'https://support-apps.github.io/arrival-confirmations/picture.jpg';
   if (img) { document.getElementById('guestImage').src = img; document.getElementById('guestImageWrap').style.display = 'block'; }
