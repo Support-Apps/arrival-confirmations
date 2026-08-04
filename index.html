@@ -782,8 +782,14 @@ async function submitRSVP() {
       const statusLabel = selectedChoice==='couple' ? 'מגיע/ה עם בן/בת זוג' : selectedChoice==='solo' ? 'מגיע/ה לבד' : selectedChoice==='more' ? 'קבוצה' : 'לא מגיע/ה';
       const count = selectedChoice==='couple' ? 2 : selectedChoice==='solo' ? 1 : selectedChoice==='more' ? (entry.count||3) : 0;
       const params = new URLSearchParams({ name: entry.name, phone: entry.phone, status: statusLabel, count, time: timeStr });
-      await fetch(s.sheetUrl + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
-    } catch(e) { /* no-cors won't throw */ }
+      // Using Image() instead of fetch — Google Apps Script redirects between domains
+      // and fetch(no-cors) doesn't follow those redirects. Image() always follows them.
+      await new Promise(resolve => {
+        const img = new Image();
+        img.onload = img.onerror = resolve;
+        img.src = s.sheetUrl + '?' + params.toString();
+      });
+    } catch(e) { /* silent fallback */ }
   }
 
   // Also save locally as backup
