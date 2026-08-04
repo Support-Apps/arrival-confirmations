@@ -308,16 +308,17 @@ let settings = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
 let responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
 let selectedChoice = null;
 
+// כתובת ברירת המחדל של Google Sheets — מובנית בקובץ עצמו, כך שגם אורח שפותח את הקישור
+// במכשיר אחר (ללא localStorage) מקבל אותה. לעדכון: שני את הערך כאן והעלי מחדש ל-GitHub Pages.
+const DEFAULT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbybBDh4tcVLDugxEhgGuKIjqcw2SqY710q96YDjkiNNUE_-6blXH6lzqmBZV2lfJqBl/exec';
+function getSheetUrl() {
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  return (s.sheetUrl && s.sheetUrl.trim()) || DEFAULT_SHEET_URL;
+}
+
 window.onload = function() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('rsvp') === '1') {
-    // Inject sheetUrl from URL param into settings so guest page can reach the sheet
-    const su = params.get('su');
-    if (su) {
-      const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-      s.sheetUrl = su;
-      localStorage.setItem('weddingSettings', JSON.stringify(s));
-    }
     showGuestPage();
   } else {
     document.getElementById('adminApp').style.display = 'block';
@@ -338,7 +339,7 @@ function showTab(tab, btn) {
 }
 
 function loadSettings() {
-  if (settings.sheetUrl) document.getElementById('sheetUrl').value = settings.sheetUrl;
+  document.getElementById('sheetUrl').value = (settings.sheetUrl && settings.sheetUrl.trim()) || DEFAULT_SHEET_URL;
   if (settings.coupleNames) document.getElementById('coupleNames').value = settings.coupleNames;
   if (settings.hebrewDate) document.getElementById('hebrewDate').value = settings.hebrewDate;
   if (settings.weddingDate) document.getElementById('weddingDate').value = settings.weddingDate;
@@ -414,9 +415,10 @@ function resetAll() {
     localStorage.removeItem('weddingSentInvites');
     localStorage.removeItem('weddingSentReminders');
     settings = {}; responses = [];
-    ['sheetUrl','coupleNames','hebrewDate','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','bitPhone','rsvpDeadline','personalMsg','reminderDate'].forEach(id => {
+    ['coupleNames','hebrewDate','weddingDate','weddingTime','weddingLocation','wazeLink','bitLink','bitPhone','rsvpDeadline','personalMsg','reminderDate'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    document.getElementById('sheetUrl').value = DEFAULT_SHEET_URL;
     updatePreview(); renderResponsesTable(); updateSheetStatus();
     showToast('כל הנתונים נמחקו');
   }
@@ -467,9 +469,7 @@ function updatePreview() {
 }
 
 function getRsvpLink() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  const base = 'https://support-apps.github.io/arrival-confirmations/?rsvp=1';
-  return s.sheetUrl ? base + '&su=' + encodeURIComponent(s.sheetUrl) : base;
+  return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1';
 }
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
@@ -800,9 +800,8 @@ async function submitRSVP() {
 
     if (!existingEntry) {
       // Try to fetch from sheet to catch registrations from other devices
-      const sheetUrl = (JSON.parse(localStorage.getItem('weddingSettings') || '{}')).sheetUrl || '';
+      const sheetUrl = getSheetUrl();
       try {
-        if (!sheetUrl) throw new Error('no url');
         const res = await fetch(sheetUrl + '?action=get');
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -862,13 +861,12 @@ async function _doSendRSVP(entry, isUpdate) {
   document.getElementById('submitBtn').style.display = 'none';
   document.getElementById('sendingMsg').style.display = 'block';
 
-  const sheetUrl = (JSON.parse(localStorage.getItem('weddingSettings') || '{}')).sheetUrl || '';
+  const sheetUrl = getSheetUrl();
   const statusLabel = entry.status==='couple' ? 'מגיע/ה עם בן/בת זוג' : entry.status==='solo' ? 'מגיע/ה לבד' : entry.status==='more' ? 'קבוצה' : 'לא מגיע/ה';
   // Use entry.count when explicitly set (e.g. after dup-update), fall back to status default
   const count = (entry.count != null) ? entry.count : (entry.status==='couple' ? 2 : entry.status==='solo' ? 1 : entry.status==='more' ? 3 : 0);
 
   try {
-    if (!sheetUrl) throw new Error('no url');
     await new Promise(resolve => {
       const form = document.createElement('form');
       form.method = 'GET';
@@ -901,8 +899,7 @@ async function _doSendRSVP(entry, isUpdate) {
 
 // Load from Google Sheets
 async function loadFromSheet() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  const sheetUrl = 'https://script.google.com/macros/s/AKfycbzr1UNbuym3c1hvgIr83LTNguHi6WQJnnpyMVSfjos8YkEyn_GBILbGvRKgY2jll01S/exec';
+  const sheetUrl = getSheetUrl();
   showToast('טוען נתונים...');
   try {
     const res = await fetch(sheetUrl + '?action=get');
@@ -961,10 +958,7 @@ function renderResponsesTable() {
 
 function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function clearResponses() {
-  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
-  const msg = s.sheetUrl
-    ? 'פעולה זו מוחקת רק את התצוגה המקומית במחשב הזה. התשובות עדיין קיימות בגיליון ה-Google Sheets, ולכן הן יחזרו להופיע בסנכרון הבא (או בפתיחת הכרטיסייה מחדש) — אלא אם תמחקי את השורות גם בגיליון עצמו. להמשיך?'
-    : 'למחוק את כל התשובות המקומיות?';
+  const msg = 'פעולה זו מוחקת רק את התצוגה המקומית במחשב הזה. התשובות עדיין קיימות בגיליון ה-Google Sheets, ולכן הן יחזרו להופיע בסנכרון הבא (או בפתיחת הכרטיסייה מחדש) — אלא אם תמחקי את השורות גם בגיליון עצמו. להמשיך?';
   if (confirm(msg)) {
     localStorage.removeItem('weddingResponses'); responses = [];
     renderResponsesTable(); showToast('התשובות נמחקו מהתצוגה המקומית');
