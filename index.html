@@ -8,6 +8,7 @@
 <meta property="og:description" content="לאישור הגעה לחצו על הקישור">
 <meta property="og:site_name" content="אישורי הגעה לחתונה">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg: #FBFBFA; --white: #FFFFFF; --text: #1C1C1A; --gold: #C5A880;
@@ -228,10 +229,10 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
     <div class="card">
       <div class="card-title">העלאת רשימת אנשי קשר</div>
-      <p class="hint-text">קובץ CSV או טקסט, שורה לכל איש קשר: <strong>שם,טלפון</strong> (לדוגמה: דנה כהן,0501234567). אפשר גם קובץ עם מספרי טלפון בלבד, מספר בכל שורה.</p>
-      <input type="file" id="contactsFile" accept=".csv,.txt" onchange="parseContactsFile(this)">
+      <p class="hint-text">קובץ Excel, CSV או טקסט, שורה לכל איש קשר: <strong>שם,טלפון</strong> (לדוגמה: דנה כהן,0501234567). אפשר גם קובץ עם מספרי טלפון בלבד, מספר בכל שורה.</p>
+      <input type="file" id="contactsFile" accept=".csv,.txt,.xlsx,.xls" onchange="parseContactsFile(this)">
       <hr class="gold">
-      <label style="margin-top:0;">הוספת איש קשר בודד</label>
+      <label style="margin-top:0;">הוספת איש קשר</label>
       <input type="text" id="newContactName" placeholder="שם">
       <input type="text" id="newContactPhone" placeholder="טלפון (לדוגמה: 0501234567)" style="margin-top:8px;">
       <button class="btn-secondary" onclick="addContactManually()">הוסף איש קשר</button>
@@ -432,7 +433,15 @@ function updatePreview() {
     (waze ? '\n\nניווט לאולם: ' + waze : '');
 }
 
-function getRsvpLink() { return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1'; }
+function getRsvpLink() {
+  const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
+  const payload = {
+    c: s.coupleNames || '', d: s.weddingDate || '', t: s.weddingTime || '', l: s.weddingLocation || '',
+    w: s.wazeLink || '', bl: s.bitLink || '', bp: s.bitPhone || ''
+  };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  return 'https://support-apps.github.io/arrival-confirmations/?rsvp=1&d=' + encodeURIComponent(encoded);
+}
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 function sendWhatsApp() {
@@ -451,37 +460,62 @@ function normalizePhone(raw) {
 }
 function last9(phone) { return String(phone || '').replace(/\D/g, '').slice(-9); }
 
+function contactsFromRows(rows) {
+  const contacts = [];
+  const seen = new Set();
+  rows.forEach(cells => {
+    const parts = cells.map(p => String(p == null ? '' : p).trim().replace(/^["']|["']$/g, '')).filter(p => p.length);
+    if (!parts.length) return;
+    let name = '', phoneRaw = '';
+    if (parts.length >= 2) {
+      const looksPhone = s => /^[\d+][\d\s\-()]{5,}$/.test(s);
+      if (looksPhone(parts[0]) && !looksPhone(parts[1])) { phoneRaw = parts[0]; name = parts[1]; }
+      else { name = parts[0]; phoneRaw = parts[1]; }
+    } else {
+      phoneRaw = parts[0];
+    }
+    const phone = normalizePhone(phoneRaw);
+    if (phone && !seen.has(phone)) { seen.add(phone); contacts.push({ name: name || phone, phone }); }
+  });
+  return contacts;
+}
+
+function finishContactsImport(contacts) {
+  if (!contacts.length) { showToast('לא נמצאו מספרי טלפון תקינים בקובץ'); return; }
+  localStorage.setItem('weddingContacts', JSON.stringify(contacts));
+  localStorage.removeItem('weddingSentInvites');
+  localStorage.removeItem('weddingSentReminders');
+  renderContactsList();
+  renderReminderStatus();
+  showToast('נטענו ' + contacts.length + ' אנשי קשר');
+}
+
 function parseContactsFile(input) {
   const file = input.files[0];
   if (!file) return;
+  const isExcel = /\.(xlsx|xls)$/i.test(file.name);
   const reader = new FileReader();
   reader.onload = function(e) {
-    const lines = String(e.target.result).split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
-    const contacts = [];
-    const seen = new Set();
-    lines.forEach(line => {
-      const parts = line.split(/[,\t]/).map(p => p.trim().replace(/^["']|["']$/g, ''));
-      let name = '', phoneRaw = '';
-      if (parts.length >= 2) {
-        const looksPhone = s => /^[\d+][\d\s\-()]{5,}$/.test(s);
-        if (looksPhone(parts[0]) && !looksPhone(parts[1])) { phoneRaw = parts[0]; name = parts[1]; }
-        else { name = parts[0]; phoneRaw = parts[1]; }
-      } else {
-        phoneRaw = parts[0];
+    let contacts = [];
+    if (isExcel) {
+      try {
+        const workbook = XLSX.read(e.target.result, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+        contacts = contactsFromRows(rows);
+      } catch (err) {
+        showToast('לא ניתן לקרוא את קובץ ה-Excel'); input.value = ''; return;
       }
-      const phone = normalizePhone(phoneRaw);
-      if (phone && !seen.has(phone)) { seen.add(phone); contacts.push({ name: name || phone, phone }); }
-    });
-    if (!contacts.length) { showToast('לא נמצאו מספרי טלפון תקינים בקובץ'); return; }
-    localStorage.setItem('weddingContacts', JSON.stringify(contacts));
-    localStorage.removeItem('weddingSentInvites');
-    localStorage.removeItem('weddingSentReminders');
-    renderContactsList();
-    renderReminderStatus();
-    showToast('נטענו ' + contacts.length + ' אנשי קשר');
+    } else {
+      const lines = String(e.target.result).split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+      const rows = lines.map(line => line.split(/[,\t]/));
+      contacts = contactsFromRows(rows);
+    }
+    finishContactsImport(contacts);
     input.value = '';
   };
-  reader.readAsText(file, 'UTF-8');
+  if (isExcel) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file, 'UTF-8');
 }
 
 function addContactManually() {
@@ -632,6 +666,20 @@ function loadImagePreviewIfExists() {}
 function showGuestPage() {
   document.getElementById('adminApp').style.display = 'none';
   document.getElementById('rsvpPage').style.display = 'block';
+  // Decode wedding details carried in the link itself, so the page works
+  // even in a browser/app (like WhatsApp's in-app browser) that has no
+  // saved settings on this device.
+  const linkParam = new URLSearchParams(window.location.search).get('d');
+  if (linkParam) {
+    try {
+      const payload = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(linkParam)))));
+      const merged = Object.assign(JSON.parse(localStorage.getItem('weddingSettings') || '{}'), {
+        coupleNames: payload.c, weddingDate: payload.d, weddingTime: payload.t, weddingLocation: payload.l,
+        wazeLink: payload.w, bitLink: payload.bl, bitPhone: payload.bp
+      });
+      localStorage.setItem('weddingSettings', JSON.stringify(merged));
+    } catch (e) { /* malformed param — fall back to whatever is already saved locally */ }
+  }
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
   if (s.coupleNames) document.getElementById('rsvpCouple').textContent = s.coupleNames;
   let info = '';
