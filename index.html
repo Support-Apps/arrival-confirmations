@@ -217,19 +217,11 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   <div class="tab-panel" id="tab-invite">
     <div class="card">
       <div class="card-title">קישור לטופס אישור הגעה</div>
-      <p style="font-family:var(--font-ui);font-size:12px;color:var(--muted);margin-bottom:12px;">שתפו קישור זה עם האורחים — בלחיצה יפתח טופס אישור הגעה.</p>
-
-      <label style="margin-top:0;">קישור קצר (מומלץ לשיתוף)</label>
+      <p style="font-family:var(--font-ui);font-size:12px;color:var(--muted);margin-bottom:12px;">שתפו קישור זה עם האורחים — בלחיצה יפתח טופס אישור הגעה. ווטסאפ יציג תצוגה מקדימה אוטומטית.</p>
       <div style="display:flex;gap:8px;align-items:stretch;">
-        <div class="link-box" id="shortLinkBox" style="flex:1;font-size:13px;">לחצי "צור קישור קצר"</div>
-        <button class="btn-secondary" id="copyShortBtn" onclick="copyShortLink()" style="margin:0;width:auto;padding:0 14px;white-space:nowrap;">העתק</button>
+        <div class="link-box" id="rsvpLinkBox" style="flex:1;font-size:11px;">שמרו הגדרות כדי לייצר קישור</div>
+        <button class="btn-secondary" onclick="copyLink()" style="margin:0;width:auto;padding:0 14px;white-space:nowrap;">העתק</button>
       </div>
-      <button class="btn-action" onclick="shortenLink()" id="shortenBtn">✂ צור קישור קצר</button>
-
-      <hr class="gold" style="margin:16px 0 12px;">
-      <label>קישור מלא (לעיון בלבד)</label>
-      <div class="link-box" id="rsvpLinkBox" style="font-size:10px;">שמרו הגדרות כדי לייצר קישור</div>
-      <button class="btn-secondary" onclick="copyLink()" style="margin-top:6px;">העתק קישור מלא</button>
     </div>
     <div class="card">
       <div class="card-title">שליחה בוואטסאפ</div>
@@ -426,7 +418,7 @@ function buildMessage(link) {
   const deadline    = settings.rsvpDeadline  ? '\n\nנא לאשר הגעה עד לתאריך ' + formatDateHebrew(settings.rsvpDeadline) : '';
   const waze        = settings.wazeLink       ? '\n\nניווט לאולם: ' + settings.wazeLink : '';
   const rsvp        = link ? '\n\nלאישור הגעה לחצו על הקישור:\n' + link : '';
-  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + dateLine + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + deadline + rsvp + waze;
+  return 'הזמנה לחתונה\n\n' + couple + '\n\nמתכבדים להזמינך לחגוג איתנו!\n\nתאריך: ' + dateLine + '\nשעה: ' + time + '\nמיקום: ' + loc + personal + deadline + waze + rsvp;
 }
 
 function updatePreview() {
@@ -468,31 +460,7 @@ function getRsvpLink() {
 function updateInviteLink() { document.getElementById('rsvpLinkBox').textContent = getRsvpLink(); }
 function copyLink() { navigator.clipboard.writeText(getRsvpLink()).then(() => showToast('הקישור הועתק')); }
 
-async function shortenLink() {
-  const longUrl = getRsvpLink();
-  const btn = document.getElementById('shortenBtn');
-  const box = document.getElementById('shortLinkBox');
-  btn.disabled = true;
-  btn.textContent = 'מקצר...';
-  try {
-    const res = await fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl));
-    if (!res.ok) throw new Error('שגיאה');
-    const short = await res.text();
-    if (!short.startsWith('http')) throw new Error('תשובה לא תקינה');
-    box.textContent = short;
-    showToast('הקישור הקצר מוכן!');
-  } catch(e) {
-    showToast('לא ניתן לקצר — בדקי חיבור לאינטרנט');
-  }
-  btn.disabled = false;
-  btn.textContent = '✂ צור קישור קצר';
-}
 
-function copyShortLink() {
-  const txt = document.getElementById('shortLinkBox').textContent;
-  if (!txt || txt === 'לחצי "צור קישור קצר"') { showToast('צרי קישור קצר תחילה'); return; }
-  navigator.clipboard.writeText(txt).then(() => showToast('הקישור הקצר הועתק'));
-}
 function sendWhatsApp() {
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
   window.open('https://wa.me/?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
@@ -665,7 +633,8 @@ function renderReminderStatus() {
   el.textContent = getUnconfirmedContacts().length;
 }
 function buildReminderMessage() {
-  return 'ראינו שטרם אישרת/ם הגעתך/ם...\nנשמח לדעת אם תגיע/י/ו, תודה רבה!\n\nלאישור הגעה:\n' + getRsvpLink();
+  const link = getRsvpLink();
+  return 'ראינו שטרם אישרת/ם הגעתך/ם...\nנשמח לדעת אם תגיע/י/ו, תודה רבה!\n\nלאישור הגעה:\n' + link;
 }
 function saveReminderDate() {
   settings.reminderDate = document.getElementById('reminderDate').value;
