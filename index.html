@@ -262,6 +262,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <div class="actions-row" id="contactsActions" style="display:none;">
         <button class="btn-secondary" onclick="toggleSelectAll(true)">בחר הכל</button>
         <button class="btn-secondary" onclick="toggleSelectAll(false)">בטל בחירה</button>
+        <button class="btn-secondary" onclick="markAllUnsent()">סמן כל הטרם נשלח</button>
         <button class="btn-danger" onclick="clearContacts()">מחק את כל הרשימה</button>
       </div>
     </div>
@@ -676,6 +677,17 @@ function resetSentInvites() {
     renderContactsList();
     showToast('הסימונים אופסו');
   }
+}
+function markAllUnsent() {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  const unsent = contacts.filter(c => !sent[c.phone]);
+  if (!unsent.length) { showToast('כולם כבר מסומנים כנשלח'); return; }
+  if (!confirm('לסמן ' + unsent.length + ' אנשי קשר כ"נשלח"?')) return;
+  unsent.forEach(c => { sent[c.phone] = Date.now(); });
+  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+  renderContactsList();
+  showToast('סומנו ' + unsent.length + ' אנשי קשר כנשלח');
 }
 function markSentManually(phone) {
   const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
