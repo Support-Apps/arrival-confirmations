@@ -260,13 +260,15 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="btn-secondary" onclick="addContactManually()">הוסף איש קשר</button>
       <div id="contactsArea" style="margin-top:14px;"><div class="empty-state"><div class="empty-text">לא הועלו אנשי קשר</div></div></div>
       <div class="actions-row" id="contactsActions" style="display:none;">
+        <button class="btn-secondary" onclick="toggleSelectAll(true)">בחר הכל</button>
+        <button class="btn-secondary" onclick="toggleSelectAll(false)">בטל בחירה</button>
         <button class="btn-danger" onclick="clearContacts()">מחק את כל הרשימה</button>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title">שליחת הזמנות לפי הרשימה</div>
-      <p class="hint-text">בוואטסאפ אי אפשר לשלוח הודעות לגמרי אוטומטית ללא אישור בכל פעם (כך וואטסאפ מונעת ספאם). הכפתור פותח את ההזמנה מוכנה לאיש הקשר הבא בתור עם מספרו — צריך רק ללחוץ "שלח" בתוך וואטסאפ עצמו, ואז ללחוץ שוב כאן כדי לעבור לבא בתור.</p>
+      <p class="hint-text">בוואטסאפ אי אפשר לשלוח הודעות לגמרי אוטומטית ללא אישור בכל פעם (כך וואטסאפ מונעת ספאם). הכפתור פותח את ההזמנה מוכנה לאיש הקשר הבא בתור עם מספרו — צריך רק ללחוץ "שלח" בתוך וואטסאפ עצמו, ואז ללחוץ שוב כאן כדי לעבור לבא בתור. הכפתור שולח רק למי שמסומן ברשימת אנשי הקשר למעלה.</p>
       <button class="btn-whatsapp" onclick="sendNextInvite()">שלח לאיש הקשר הבא בתור</button>
       <button class="btn-secondary" onclick="resetSentInvites()">אפס סימוני "נשלח"</button>
     </div>
@@ -577,27 +579,57 @@ function removeContact(phone) {
   localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
   const sentR = JSON.parse(localStorage.getItem('weddingSentReminders') || '{}'); delete sentR[phone];
   localStorage.setItem('weddingSentReminders', JSON.stringify(sentR));
+  const selected = getSelectedContacts();
+  if (selected) { selected.delete(phone); setSelectedContacts(selected); }
   renderContactsList();
   renderReminderStatus();
 }
 
+function getSelectedContacts() {
+  const raw = localStorage.getItem('weddingSelectedContacts');
+  return raw ? new Set(JSON.parse(raw)) : null; // null = not set yet, treat as "all selected"
+}
+function setSelectedContacts(set) {
+  localStorage.setItem('weddingSelectedContacts', JSON.stringify(Array.from(set)));
+}
+function isContactSelected(phone, selected) {
+  return selected ? selected.has(phone) : true; // default: everyone selected
+}
+function toggleContactSelection(phone, checked) {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  let selected = getSelectedContacts();
+  if (!selected) selected = new Set(contacts.map(c => c.phone)); // materialize "all" into a real set
+  if (checked) selected.add(phone); else selected.delete(phone);
+  setSelectedContacts(selected);
+  renderContactsList();
+}
+function toggleSelectAll(checked) {
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  setSelectedContacts(checked ? new Set(contacts.map(c => c.phone)) : new Set());
+  renderContactsList();
+}
 function renderContactsList() {
   const area = document.getElementById('contactsArea');
   const actions = document.getElementById('contactsActions');
   if (!area) return;
   const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
   const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  const selected = getSelectedContacts();
   if (!contacts.length) {
     area.innerHTML = '<div class="empty-state"><div class="empty-text">לא הועלו אנשי קשר</div></div>';
     actions.style.display = 'none';
     return;
   }
   actions.style.display = 'flex';
-  let html = '<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th></th></tr></thead><tbody>';
+  const selectedCount = contacts.filter(c => isContactSelected(c.phone, selected)).length;
+  const allSelected = selectedCount === contacts.length;
+  let html = '<div class="table-wrap"><table><thead><tr><th><input type="checkbox" ' + (allSelected ? 'checked' : '') + ' onchange="toggleSelectAll(this.checked)"></th><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th></th></tr></thead><tbody>';
   contacts.forEach((c, i) => {
-    html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone)}</td><td>${sent[c.phone] ? '<span class="badge badge-couple">נשלח</span>' : '<span class="badge badge-no">טרם נשלח</span>'}</td><td><button class="btn-danger" style="margin:0;padding:4px 8px;font-size:10px;width:auto;" onclick="removeContact('${c.phone}')">מחק</button></td></tr>`;
+    const checked = isContactSelected(c.phone, selected);
+    html += `<tr><td><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleContactSelection('${c.phone}', this.checked)"></td><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone)}</td><td>${sent[c.phone] ? '<span class="badge badge-couple">נשלח</span>' : '<span class="badge badge-no">טרם נשלח</span>'}</td><td><button class="btn-danger" style="margin:0;padding:4px 8px;font-size:10px;width:auto;" onclick="removeContact('${c.phone}')">מחק</button></td></tr>`;
   });
   html += '</tbody></table></div>';
+  html += `<p class="hint-text" style="margin-top:8px;">${selectedCount} מתוך ${contacts.length} נבחרים לשליחה</p>`;
   area.innerHTML = html;
 }
 
@@ -614,12 +646,15 @@ function clearContacts() {
 
 // GUIDED WHATSAPP SEND (one contact at a time — WhatsApp requires a manual tap to actually send)
 function sendNextInvite() {
-  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
-  if (!contacts.length) { showToast('העלי קודם רשימת אנשי קשר'); return; }
+  const allContacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  if (!allContacts.length) { showToast('העלי קודם רשימת אנשי קשר'); return; }
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
+  const selected = getSelectedContacts();
+  const contacts = allContacts.filter(c => isContactSelected(c.phone, selected));
+  if (!contacts.length) { showToast('לא נבחרו אנשי קשר לשליחה — סמני אותם ברשימה'); return; }
   const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
   const next = contacts.find(c => !sent[c.phone]);
-  if (!next) { showToast('ההזמנה כבר נשלחה לכל הרשימה'); return; }
+  if (!next) { showToast('ההזמנה כבר נשלחה לכל הנבחרים'); return; }
   window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
   sent[next.phone] = Date.now();
   localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
@@ -636,7 +671,9 @@ function resetSentInvites() {
 
 // REMINDERS FOR NON-RESPONDERS
 function getUnconfirmedContacts() {
-  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const allContacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const selected = getSelectedContacts();
+  const contacts = allContacts.filter(c => isContactSelected(c.phone, selected));
   const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
   const responded = new Set(responses.map(r => last9(r.phone)).filter(Boolean));
   return contacts.filter(c => !responded.has(last9(c.phone)));
