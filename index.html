@@ -626,7 +626,10 @@ function renderContactsList() {
   let html = '<div class="table-wrap"><table><thead><tr><th><input type="checkbox" ' + (allSelected ? 'checked' : '') + ' onchange="toggleSelectAll(this.checked)"></th><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th></th></tr></thead><tbody>';
   contacts.forEach((c, i) => {
     const checked = isContactSelected(c.phone, selected);
-    html += `<tr><td><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleContactSelection('${c.phone}', this.checked)"></td><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone)}</td><td>${sent[c.phone] ? '<span class="badge badge-couple">נשלח</span>' : '<span class="badge badge-no">טרם נשלח</span>'}</td><td><button class="btn-danger" style="margin:0;padding:4px 8px;font-size:10px;width:auto;" onclick="removeContact('${c.phone}')">מחק</button></td></tr>`;
+    const sentBadge = sent[c.phone]
+      ? `<span class="badge badge-couple">נשלח</span> <button onclick="unmarkSent('${c.phone}')" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:0;font-family:var(--font-ui);">✕ בטל</button>`
+      : `<span class="badge badge-no">טרם נשלח</span> <button onclick="markSentManually('${c.phone}')" style="background:none;border:1px solid var(--gold);color:var(--gold);font-size:10px;cursor:pointer;padding:2px 6px;font-family:var(--font-ui);font-weight:700;">✓ סמן</button>`;
+    html += `<tr><td><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleContactSelection('${c.phone}', this.checked)"></td><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone)}</td><td>${sentBadge}</td><td><button class="btn-danger" style="margin:0;padding:4px 8px;font-size:10px;width:auto;" onclick="removeContact('${c.phone}')">מחק</button></td></tr>`;
   });
   html += '</tbody></table></div>';
   html += `<p class="hint-text" style="margin-top:8px;">${selectedCount} מתוך ${contacts.length} נבחרים לשליחה</p>`;
@@ -656,10 +659,16 @@ function sendNextInvite() {
   const next = contacts.find(c => !sent[c.phone]);
   if (!next) { showToast('ההזמנה כבר נשלחה לכל הנבחרים'); return; }
   window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildMessage(getRsvpLink())), '_blank');
-  sent[next.phone] = Date.now();
-  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
-  renderContactsList();
-  showToast('נפתחה הזמנה ל-' + next.name + ' — לחצי "שלח" בוואטסאפ');
+  setTimeout(() => {
+    if (confirm('האם שלחת את ההזמנה ל-' + next.name + ' בוואטסאפ?\nלחצי "אישור" כדי לסמן כנשלח, או "ביטול" אם עדיין לא שלחת.')) {
+      sent[next.phone] = Date.now();
+      localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+      renderContactsList();
+      showToast('✓ ' + next.name + ' סומן/ה כנשלח');
+    } else {
+      showToast('לא סומן כנשלח — ניתן לשלוח שוב');
+    }
+  }, 1500);
 }
 function resetSentInvites() {
   if (confirm('לאפס את סימוני "נשלח" עבור כל אנשי הקשר?')) {
@@ -667,6 +676,20 @@ function resetSentInvites() {
     renderContactsList();
     showToast('הסימונים אופסו');
   }
+}
+function markSentManually(phone) {
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  sent[phone] = Date.now();
+  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+  renderContactsList();
+  showToast('סומן כנשלח ידנית');
+}
+function unmarkSent(phone) {
+  const sent = JSON.parse(localStorage.getItem('weddingSentInvites') || '{}');
+  delete sent[phone];
+  localStorage.setItem('weddingSentInvites', JSON.stringify(sent));
+  renderContactsList();
+  showToast('הסימון בוטל');
 }
 
 // REMINDERS FOR NON-RESPONDERS
@@ -709,10 +732,16 @@ function sendNextReminder() {
   const next = unconfirmed.find(c => !sentR[c.phone]);
   if (!next) { showToast('התזכורת כבר נשלחה לכל מי שטרם אישר'); return; }
   window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildReminderMessage()), '_blank');
-  sentR[next.phone] = Date.now();
-  localStorage.setItem('weddingSentReminders', JSON.stringify(sentR));
-  renderReminderStatus();
-  showToast('נפתחה תזכורת ל-' + next.name + ' — לחצי "שלח" בוואטסאפ');
+  setTimeout(() => {
+    if (confirm('האם שלחת את התזכורת ל-' + next.name + ' בוואטסאפ?\nלחצי "אישור" כדי לסמן כנשלח, או "ביטול" אם עדיין לא שלחת.')) {
+      sentR[next.phone] = Date.now();
+      localStorage.setItem('weddingSentReminders', JSON.stringify(sentR));
+      renderReminderStatus();
+      showToast('✓ ' + next.name + ' סומן/ה כנשלח (תזכורת)');
+    } else {
+      showToast('לא סומן כנשלח — ניתן לשלוח שוב');
+    }
+  }, 1500);
 }
 function resetSentReminders() {
   if (confirm('לאפס את סימוני התזכורות שנשלחו?')) {
