@@ -284,12 +284,33 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="btn-whatsapp" onclick="sendNextReminder()">שלח תזכורת לאיש הקשר הבא</button>
       <button class="btn-secondary" onclick="resetSentReminders()">אפס סימוני תזכורות שנשלחו</button>
     </div>
+
     <div class="card">
       <div class="card-title">תזכורת תאריך לאורחים שאישרו הגעה</div>
       <p class="hint-text">שליחת הודעת תזכורת על תאריך האירוע המתקרב — לכל מי שאישר הגעה (מגיע/ה לבד, עם בן/בת זוג, או קבוצה). מומלץ לשלוח כ-3 ימים לפני האירוע.</p>
       <div class="reminder-stat"><span class="stat-num" id="confirmedCount">0</span><br><span class="stat-label">אישרו הגעה</span></div>
       <button class="btn-whatsapp" onclick="sendNextDateReminder()">שלח תזכורת תאריך לאיש הקשר הבא</button>
       <button class="btn-secondary" onclick="resetSentDateReminders()">אפס סימוני תזכורות תאריך</button>
+    </div>
+
+    <div class="card" style="border-color:var(--gold);">
+      <div class="card-title">שליחה לפי תשובות — ללא רשימת אנשי קשר</div>
+      <p class="hint-text">שליחה ישירות לפי מי שענה לטופס — בלי קשר לרשימת אנשי הקשר. שימושי לאלה שהצטרפו דרך קבוצה או שסימנת ידנית.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+        <div style="text-align:center;padding:14px 8px;background:var(--light-bg);border:1px solid var(--border);">
+          <span class="stat-num" id="statConfirmedDirect">0</span>
+          <span class="stat-label" style="display:block;margin-top:4px;">אישרו הגעה</span>
+        </div>
+        <div style="text-align:center;padding:14px 8px;background:var(--light-bg);border:1px solid var(--border);">
+          <span class="stat-num" id="statNotConfirmedDirect">0</span>
+          <span class="stat-label" style="display:block;margin-top:4px;">לא אישרו</span>
+        </div>
+      </div>
+      <button class="btn-whatsapp" style="margin-top:12px;" onclick="sendNextToConfirmed()">שלח הודעה למי שאישר הגעה (הבא בתור)</button>
+      <button class="btn-secondary" onclick="resetSentToConfirmed()">אפס סימונים — אישרו</button>
+      <hr class="gold" style="margin:12px 0;">
+      <button class="btn-whatsapp" onclick="sendNextToUnconfirmed()">שלח הודעה למי שלא אישר הגעה (הבא בתור)</button>
+      <button class="btn-secondary" onclick="resetSentToUnconfirmed()">אפס סימונים — לא אישרו</button>
     </div>
   </div>
 
@@ -733,6 +754,7 @@ function renderReminderStatus() {
   const el = document.getElementById('reminderCount');
   if (!el) return;
   el.textContent = getUnconfirmedContacts().length;
+  updateDirectStats();
 }
 function buildReminderMessage() {
   const link = getRsvpLink();
@@ -818,6 +840,62 @@ function sendNextDateReminder() {
 function resetSentDateReminders() {
   if (confirm('לאפס את סימוני תזכורות התאריך?')) {
     localStorage.removeItem('weddingSentDateReminders');
+    showToast('הסימונים אופסו');
+  }
+}
+
+// DIRECT SEND — based on responses only, no contact list needed
+function updateDirectStats() {
+  const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const confirmed   = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה' && r.phone);
+  const unconfirmed = responses.filter(r => (r.status === 'not-coming' || r.status === 'לא מגיע/ה') && r.phone);
+  const el1 = document.getElementById('statConfirmedDirect');
+  const el2 = document.getElementById('statNotConfirmedDirect');
+  if (el1) el1.textContent = confirmed.length;
+  if (el2) el2.textContent = unconfirmed.length;
+}
+function sendNextToConfirmed() {
+  if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
+  const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const confirmed = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה' && r.phone);
+  if (!confirmed.length) { showToast('אין אורחים שאישרו הגעה עם מספר טלפון'); return; }
+  const sent = JSON.parse(localStorage.getItem('weddingSentDirectConfirmed') || '{}');
+  const next = confirmed.find(c => !sent[last9(c.phone)]);
+  if (!next) { showToast('ההודעה כבר נשלחה לכל מי שאישר'); return; }
+  window.open('https://wa.me/' + next.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(buildDateReminderMessage()), '_blank');
+  setTimeout(() => {
+    if (confirm('האם שלחת הודעה ל-' + next.name + '?\nלחצי "אישור" כדי לסמן כנשלח.')) {
+      sent[last9(next.phone)] = Date.now();
+      localStorage.setItem('weddingSentDirectConfirmed', JSON.stringify(sent));
+      showToast('✓ ' + next.name + ' סומן/ה כנשלח');
+    }
+  }, 1500);
+}
+function resetSentToConfirmed() {
+  if (confirm('לאפס סימוני שליחה לאלה שאישרו?')) {
+    localStorage.removeItem('weddingSentDirectConfirmed');
+    showToast('הסימונים אופסו');
+  }
+}
+function sendNextToUnconfirmed() {
+  const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const unconfirmed = responses.filter(r => (r.status === 'not-coming' || r.status === 'לא מגיע/ה') && r.phone);
+  if (!unconfirmed.length) { showToast('אין אורחים שענו "לא מגיע/ה" עם מספר טלפון'); return; }
+  const sent = JSON.parse(localStorage.getItem('weddingSentDirectUnconfirmed') || '{}');
+  const next = unconfirmed.find(c => !sent[last9(c.phone)]);
+  if (!next) { showToast('ההודעה כבר נשלחה לכולם ברשימה זו'); return; }
+  window.open('https://wa.me/' + next.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(buildReminderMessage()), '_blank');
+  setTimeout(() => {
+    if (confirm('האם שלחת הודעה ל-' + next.name + '?\nלחצי "אישור" כדי לסמן כנשלח.')) {
+      sent[last9(next.phone)] = Date.now();
+      localStorage.setItem('weddingSentDirectUnconfirmed', JSON.stringify(sent));
+      showToast('✓ ' + next.name + ' סומן/ה כנשלח');
+    }
+  }, 1500);
+}
+function resetSentToUnconfirmed() {
+  if (confirm('לאפס סימוני שליחה לאלה שלא אישרו?')) {
+    localStorage.removeItem('weddingSentDirectUnconfirmed');
     showToast('הסימונים אופסו');
   }
 }
@@ -1076,7 +1154,7 @@ function renderResponsesTable() {
   const notComing = responses.filter(r => r.status === 'not-coming' || r.status === 'לא מגיע/ה');
   const totalGuests = coming.reduce((s, r) => {
     if (r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג') return s + 2;
-    if (r.status === 'more' || r.status === 'קבוצה') return s + (Number(r.count)||3);
+    if (r.status === 'more' || r.status === 'קבוצה') return s + (Number(r.count)||1);
     return s + 1;
   }, 0);
 
@@ -1090,6 +1168,7 @@ function renderResponsesTable() {
   if (statNoResp) statNoResp.textContent = contacts.length ? pending.length : '—';
   const confirmedEl = document.getElementById('confirmedCount');
   if (confirmedEl) confirmedEl.textContent = coming.length;
+  updateDirectStats();
 
   // pending filter — show contacts list
   if (_responseFilter === 'pending') {
@@ -1126,7 +1205,7 @@ function renderResponsesTable() {
                   : isNo     ? '<span class="badge badge-no">לא מגיע/ה</span>'
                   : isMore   ? '<span class="badge badge-couple">קבוצה</span>'
                              : '<span class="badge badge-solo">לבד</span>';
-      const count = isCouple ? 2 : isNo ? 0 : isMore ? (Number(r.count)||3) : 1;
+      const count = isCouple ? 2 : isNo ? 0 : isMore ? (Number(r.count)||1) : 1;
       html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(r.name)}</strong></td><td style="color:var(--muted);">${esc(r.phone||'—')}</td><td>${badge}</td><td style="text-align:center;font-weight:700;">${count||'—'}</td><td style="font-size:11px;color:var(--muted);">${esc(r.time)}</td></tr>`;
     } catch(e) {
       html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td colspan="5" style="color:#c0392b;">שגיאה בהצגת שורה זו</td></tr>`;
