@@ -284,16 +284,31 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
       <button class="btn-whatsapp" onclick="sendNextReminder()">שלח תזכורת לאיש הקשר הבא</button>
       <button class="btn-secondary" onclick="resetSentReminders()">אפס סימוני תזכורות שנשלחו</button>
     </div>
+    <div class="card">
+      <div class="card-title">תזכורת תאריך לאורחים שאישרו הגעה</div>
+      <p class="hint-text">שליחת הודעת תזכורת על תאריך האירוע המתקרב — לכל מי שאישר הגעה (מגיע/ה לבד, עם בן/בת זוג, או קבוצה). מומלץ לשלוח כ-3 ימים לפני האירוע.</p>
+      <div class="reminder-stat"><span class="stat-num" id="confirmedCount">0</span><br><span class="stat-label">אישרו הגעה</span></div>
+      <button class="btn-whatsapp" onclick="sendNextDateReminder()">שלח תזכורת תאריך לאיש הקשר הבא</button>
+      <button class="btn-secondary" onclick="resetSentDateReminders()">אפס סימוני תזכורות תאריך</button>
+    </div>
   </div>
 
   <!-- RESPONSES TAB -->
   <div class="tab-panel" id="tab-responses">
-    <div class="stats-bar">
+    <div class="stats-bar" style="grid-template-columns:1fr 1fr 1fr;">
       <div class="stat-box gold"><span class="stat-num" id="statComing">0</span><span class="stat-label">מגיעים</span></div>
       <div class="stat-box"><span class="stat-num" id="statNotComing">0</span><span class="stat-label">לא מגיעים</span></div>
+      <div class="stat-box"><span class="stat-num" id="statNoResponse">—</span><span class="stat-label">טרם אישרו</span></div>
     </div>
-    <div style="margin:0 16px 10px;display:flex;gap:8px;">
-      <button class="btn-secondary" style="margin:0;flex:1;" onclick="loadFromSheet()">רענן מ-Google Sheets</button>
+    <div style="margin:0 16px 10px;display:flex;gap:8px;align-items:center;">
+      <button class="btn-secondary" style="margin:0;flex:1;" onclick="loadFromSheet()">רענן עכשיו</button>
+      <button id="autoRefreshBtn" class="btn-secondary" style="margin:0;flex:1;" onclick="toggleAutoRefresh()">▶ רענון אוטומטי</button>
+    </div>
+    <div style="margin:0 16px 10px;display:flex;gap:6px;">
+      <button id="filterAll" class="btn-action" style="margin:0;flex:1;padding:9px;" onclick="setFilter('all')">הכל</button>
+      <button id="filterComing" class="btn-secondary" style="margin:0;flex:1;padding:9px;" onclick="setFilter('coming')">מגיעים</button>
+      <button id="filterNot" class="btn-secondary" style="margin:0;flex:1;padding:9px;" onclick="setFilter('not')">לא מגיעים</button>
+      <button id="filterPending" class="btn-secondary" style="margin:0;flex:1;padding:9px;" onclick="setFilter('pending')">טרם אישרו</button>
     </div>
     <div id="tableArea"><div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div></div>
     <div class="actions-row" id="exportRow" style="display:none;">
@@ -338,6 +353,7 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'responses') { loadFromSheet(); }
+  else { stopAutoRefresh(); }
   if (tab === 'invite') { updateInviteLink(); renderContactsList(); renderReminderStatus(); loadReminderDate(); }
 }
 
@@ -763,6 +779,49 @@ function resetSentReminders() {
   }
 }
 
+// DATE REMINDER — for confirmed guests
+function buildDateReminderMessage() {
+  const couple  = settings.coupleNames    || '[שמות בני הזוג]';
+  const date    = settings.weddingDate    ? formatDateHebrew(settings.weddingDate) : '[תאריך]';
+  const hebrew  = settings.hebrewDate     ? settings.hebrewDate + ' | ' : '';
+  const time    = settings.weddingTime    || '[שעה]';
+  const loc     = settings.weddingLocation || '[מיקום]';
+  return `תזכורת לאירוע שמחתנו 🎊\n${couple}\n\n📅 ${hebrew}${date}\n🕐 ${time}\n📍 ${loc}\n\nמחכים לראותכם! 💛`;
+}
+function getConfirmedContacts() {
+  const allContacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const responses   = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const confirmedPhones = new Set(
+    responses
+      .filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה')
+      .map(r => last9(r.phone)).filter(Boolean)
+  );
+  return allContacts.filter(c => confirmedPhones.has(last9(c.phone)));
+}
+function sendNextDateReminder() {
+  if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
+  const confirmed = getConfirmedContacts();
+  if (!confirmed.length) { showToast('אין אורחים שאישרו הגעה עדיין'); return; }
+  const sentD = JSON.parse(localStorage.getItem('weddingSentDateReminders') || '{}');
+  const next = confirmed.find(c => !sentD[c.phone]);
+  if (!next) { showToast('תזכורת התאריך כבר נשלחה לכל מי שאישר'); return; }
+  window.open('https://wa.me/' + next.phone + '?text=' + encodeURIComponent(buildDateReminderMessage()), '_blank');
+  setTimeout(() => {
+    if (confirm('האם שלחת את תזכורת התאריך ל-' + next.name + '?\nלחצי "אישור" כדי לסמן כנשלח.')) {
+      sentD[next.phone] = Date.now();
+      localStorage.setItem('weddingSentDateReminders', JSON.stringify(sentD));
+      renderReminderStatus();
+      showToast('✓ ' + next.name + ' — תזכורת תאריך נשלחה');
+    }
+  }, 1500);
+}
+function resetSentDateReminders() {
+  if (confirm('לאפס את סימוני תזכורות התאריך?')) {
+    localStorage.removeItem('weddingSentDateReminders');
+    showToast('הסימונים אופסו');
+  }
+}
+
 // IMAGE
 function handleImageUpload(input) {
   const file = input.files[0]; if (!file) return;
@@ -994,9 +1053,23 @@ async function loadFromSheet() {
   }
 }
 
+// FILTER STATE
+let _responseFilter = 'all';
+function setFilter(f) {
+  _responseFilter = f;
+  ['all','coming','not','pending'].forEach(k => {
+    const btn = document.getElementById('filter' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (!btn) return;
+    btn.className = k === f ? 'btn-action' : 'btn-secondary';
+    btn.style.margin = '0'; btn.style.flex = '1'; btn.style.padding = '9px';
+  });
+  renderResponsesTable();
+}
+
 // RESPONSES TABLE
 function renderResponsesTable() {
   responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
+  const contacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
   const area = document.getElementById('tableArea');
   const exportRow = document.getElementById('exportRow');
   const coming    = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה');
@@ -1006,16 +1079,45 @@ function renderResponsesTable() {
     if (r.status === 'more' || r.status === 'קבוצה') return s + (Number(r.count)||3);
     return s + 1;
   }, 0);
+
+  // pending = contacts who haven't responded
+  const respondedPhones = new Set(responses.map(r => last9(r.phone)).filter(Boolean));
+  const pending = contacts.filter(c => !respondedPhones.has(last9(c.phone)));
+
   document.getElementById('statComing').textContent = totalGuests;
   document.getElementById('statNotComing').textContent = notComing.length;
-  if (!responses.length) {
+  const statNoResp = document.getElementById('statNoResponse');
+  if (statNoResp) statNoResp.textContent = contacts.length ? pending.length : '—';
+  const confirmedEl = document.getElementById('confirmedCount');
+  if (confirmedEl) confirmedEl.textContent = coming.length;
+
+  // pending filter — show contacts list
+  if (_responseFilter === 'pending') {
+    exportRow.style.display = 'none';
+    if (!contacts.length) { area.innerHTML = '<div class="empty-state"><div class="empty-text">לא הועלתה רשימת אנשי קשר</div></div>'; return; }
+    if (!pending.length) { area.innerHTML = '<div class="empty-state"><div class="empty-text">כולם כבר אישרו הגעה 🎉</div></div>'; return; }
+    let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th></tr></thead><tbody>`;
+    pending.forEach((c, i) => {
+      html += `<tr><td style="color:var(--muted);font-size:11px;">${i+1}</td><td><strong>${esc(c.name)}</strong></td><td style="direction:ltr;text-align:right;color:var(--muted);">${esc(c.phone||'—')}</td></tr>`;
+    });
+    html += `</tbody></table></div><div style="text-align:center;padding:6px 16px 12px;font-family:var(--font-ui);font-size:11px;letter-spacing:1px;color:var(--muted);">סה״כ טרם אישרו: <strong style="color:var(--text);">${pending.length}</strong></div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  // regular filters
+  let filtered = responses;
+  if (_responseFilter === 'coming') filtered = coming;
+  if (_responseFilter === 'not')    filtered = notComing;
+
+  if (!filtered.length) {
     area.innerHTML = '<div class="empty-state"><div class="empty-text">אין תשובות עדיין</div></div>';
     exportRow.style.display = 'none'; return;
   }
   exportRow.style.display = 'flex';
 
   let html = `<div class="table-wrap"><table><thead><tr><th>#</th><th>שם</th><th>טלפון</th><th>סטטוס</th><th>אורחים</th><th>זמן</th></tr></thead><tbody>`;
-  responses.forEach((r, i) => {
+  filtered.forEach((r, i) => {
     try {
       const isCouple = r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג';
       const isNo     = r.status === 'not-coming' || r.status === 'לא מגיע/ה';
@@ -1057,6 +1159,31 @@ function exportCSV() {
   const url = URL.createObjectURL(blob); const a = document.createElement('a');
   a.href=url; a.download='אישורי_הגעה.csv'; a.click(); URL.revokeObjectURL(url);
   showToast('הקובץ יורד...');
+}
+
+// AUTO-REFRESH
+let _autoRefreshTimer = null;
+let _autoRefreshInterval = null;
+
+function toggleAutoRefresh() {
+  if (_autoRefreshTimer) { stopAutoRefresh(); } else { startAutoRefresh(); }
+}
+
+function startAutoRefresh() {
+  const btn = document.getElementById('autoRefreshBtn');
+  if (btn) { btn.textContent = '⏹ עצור רענון'; btn.style.borderColor = 'var(--gold)'; btn.style.color = 'var(--gold)'; }
+  _autoRefreshInterval = setInterval(loadFromSheet, 30000);
+  _autoRefreshTimer = true;
+  showToast('רענון אוטומטי פעיל — כל 30 שניות');
+}
+
+function stopAutoRefresh() {
+  if (_autoRefreshInterval) clearInterval(_autoRefreshInterval);
+  _autoRefreshInterval = null;
+  _autoRefreshTimer = null;
+  const btn = document.getElementById('autoRefreshBtn');
+  if (btn) { btn.textContent = '▶ רענון אוטומטי'; btn.style.borderColor = ''; btn.style.color = ''; }
+  showToast('רענון אוטומטי הופסק');
 }
 
 function showToast(msg) {
