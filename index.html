@@ -374,7 +374,7 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'responses') { loadFromSheet(); }
-  else { stopAutoRefresh(); }
+  else { if (_autoRefreshTimer) stopAutoRefresh(); }
   if (tab === 'invite') { updateInviteLink(); renderContactsList(); renderReminderStatus(); loadReminderDate(); }
 }
 
@@ -845,13 +845,20 @@ function resetSentDateReminders() {
 }
 
 // DIRECT SEND — based on responses only, no contact list needed
+function countGuests(r) {
+  if (r.status === 'couple' || r.status === 'מגיע/ה עם בן/בת זוג') return 2;
+  if (r.status === 'more'   || r.status === 'קבוצה')               return Number(r.count) || 1;
+  if (r.status === 'not-coming' || r.status === 'לא מגיע/ה')       return 0;
+  return 1;
+}
 function updateDirectStats() {
   const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
   const confirmed   = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה' && r.phone);
   const unconfirmed = responses.filter(r => (r.status === 'not-coming' || r.status === 'לא מגיע/ה') && r.phone);
+  const totalConfirmed = confirmed.reduce((s, r) => s + countGuests(r), 0);
   const el1 = document.getElementById('statConfirmedDirect');
   const el2 = document.getElementById('statNotConfirmedDirect');
-  if (el1) el1.textContent = confirmed.length;
+  if (el1) el1.textContent = totalConfirmed;
   if (el2) el2.textContent = unconfirmed.length;
 }
 function sendNextToConfirmed() {
@@ -1120,7 +1127,7 @@ async function loadFromSheet() {
     const res = await fetch(sheetUrl + '?action=get');
     const data = await res.json();
     if (Array.isArray(data)) {
-      responses = data.map(r => ({ name: String(r.name||''), phone: String(r.phone||''), status: String(r.statusKey||r.status||''), time: String(r.time||'') }));
+      responses = data.map(r => ({ name: String(r.name||''), phone: String(r.phone||''), status: String(r.statusKey||r.status||''), count: Number(r.count)||0, time: String(r.time||'') }));
       localStorage.setItem('weddingResponses', JSON.stringify(responses));
       renderResponsesTable();
       showToast('הנתונים עודכנו');
