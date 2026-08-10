@@ -250,9 +250,12 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     </div>
 
     <div class="card">
-      <div class="card-title">העלאת רשימת אנשי קשר</div>
-      <p class="hint-text">קובץ אקסל, CSV או טקסט. עמודה אחת לשם ואחת לטלפון (לדוגמה: דנה כהן, 0501234567) — אפשר גם קובץ עם מספרי טלפון בלבד, מספר בכל שורה/תא.</p>
-      <input type="file" id="contactsFile" accept=".csv,.txt,.xlsx,.xls" onchange="parseContactsFile(this)">
+      <div class="card-title">העלאת רשימות אנשי קשר</div>
+      <p class="hint-text">קובץ אקסל, CSV או טקסט. עמודה אחת לשם ואחת לטלפון (לדוגמה: דנה כהן, 0501234567) — אפשר גם קובץ עם מספרי טלפון בלבד. שתי הרשימות יתמזגו יחד.</p>
+      <label style="margin-top:0;">הרשימה שלי</label>
+      <input type="file" id="contactsFileMine" accept=".csv,.txt,.xlsx,.xls" onchange="parseContactsFile(this, 'mine')">
+      <label>הרשימה של בן/בת הזוג</label>
+      <input type="file" id="contactsFilePartner" accept=".csv,.txt,.xlsx,.xls" onchange="parseContactsFile(this, 'partner')">
       <hr class="gold">
       <label style="margin-top:0;">הוספת איש קשר</label>
       <input type="text" id="newContactName" placeholder="שם">
@@ -552,17 +555,21 @@ function contactsFromRows(rows) {
   return contacts;
 }
 
-function finishContactsImport(contacts) {
+function finishContactsImport(contacts, side) {
   if (!contacts.length) { showToast('לא נמצאו מספרי טלפון תקינים בקובץ'); return; }
-  localStorage.setItem('weddingContacts', JSON.stringify(contacts));
-  localStorage.removeItem('weddingSentInvites');
-  localStorage.removeItem('weddingSentReminders');
+  // Merge with existing contacts — keep existing entries, add new ones by phone
+  const existing = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
+  const existingPhones = new Set(existing.map(c => c.phone));
+  const added = contacts.filter(c => !existingPhones.has(c.phone));
+  const merged = existing.concat(added);
+  localStorage.setItem('weddingContacts', JSON.stringify(merged));
+  const sideLabel = side === 'partner' ? 'של בן/בת הזוג' : 'שלי';
+  showToast('נוספו ' + added.length + ' אנשי קשר מהרשימה ' + sideLabel + ' — סה"כ ' + merged.length);
   renderContactsList();
   renderReminderStatus();
-  showToast('נטענו ' + contacts.length + ' אנשי קשר');
 }
 
-function parseContactsFile(input) {
+function parseContactsFile(input, side) {
   const file = input.files[0];
   if (!file) return;
   const isExcel = /\.(xlsx|xls)$/i.test(file.name);
@@ -575,7 +582,7 @@ function parseContactsFile(input) {
         const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-        finishContactsImport(contactsFromRows(rows));
+        finishContactsImport(contactsFromRows(rows), side);
       } catch (err) {
         showToast('לא ניתן לקרוא את קובץ האקסל');
       }
@@ -587,7 +594,7 @@ function parseContactsFile(input) {
     reader.onload = function(e) {
       const lines = String(e.target.result).split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
       const rows = lines.map(line => line.split(/[,\t]/));
-      finishContactsImport(contactsFromRows(rows));
+      finishContactsImport(contactsFromRows(rows), side);
       input.value = '';
     };
     reader.readAsText(file, 'UTF-8');
