@@ -115,7 +115,7 @@ hr.gold { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
     <div class="card-title">אנא אשרו את הגעתכם</div>
     <label>שם מלא *</label>
     <input type="text" id="guestName" placeholder="שם פרטי ושם משפחה">
-    <label>מספר טלפון</label>
+    <label>מספר טלפון *</label>
     <input type="text" id="guestPhone" placeholder="050-0000000">
     <label style="margin-top:18px;">האם תגיעו?</label>
     <div class="rsvp-choices">
@@ -533,6 +533,14 @@ function normalizePhone(raw) {
   return /^\d{10,13}$/.test(p) ? p : '';
 }
 function last9(phone) { return String(phone || '').replace(/\D/g, '').slice(-9); }
+function normalizeName(s) {
+  return String(s || '')
+    .replace(/[\u0591-\u05C7]/g, '')        // Hebrew niqqud/cantillation
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2000}-\u{206F}]/gu, '') // emoji/symbols
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
 
 function contactsFromRows(rows) {
   // rows: array of arrays (cells) — works for both CSV/text lines and Excel sheet rows
@@ -755,7 +763,8 @@ function getUnconfirmedContacts() {
   const contacts = allContacts.filter(c => isContactSelected(c.phone, selected));
   const responses = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
   const responded = new Set(responses.map(r => last9(r.phone)).filter(Boolean));
-  return contacts.filter(c => !responded.has(last9(c.phone)));
+  const respondedNames = new Set(responses.map(r => normalizeName(r.name)).filter(Boolean));
+  return contacts.filter(c => !responded.has(last9(c.phone)) && !respondedNames.has(normalizeName(c.name)));
 }
 function renderReminderStatus() {
   const el = document.getElementById('reminderCount');
@@ -820,12 +829,10 @@ function buildDateReminderMessage() {
 function getConfirmedContacts() {
   const allContacts = JSON.parse(localStorage.getItem('weddingContacts') || '[]');
   const responses   = JSON.parse(localStorage.getItem('weddingResponses') || '[]');
-  const confirmedPhones = new Set(
-    responses
-      .filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה')
-      .map(r => last9(r.phone)).filter(Boolean)
-  );
-  return allContacts.filter(c => confirmedPhones.has(last9(c.phone)));
+  const confirmedResponses = responses.filter(r => r.status !== 'not-coming' && r.status !== 'לא מגיע/ה');
+  const confirmedPhones = new Set(confirmedResponses.map(r => last9(r.phone)).filter(Boolean));
+  const confirmedNames = new Set(confirmedResponses.map(r => normalizeName(r.name)).filter(Boolean));
+  return allContacts.filter(c => confirmedPhones.has(last9(c.phone)) || confirmedNames.has(normalizeName(c.name)));
 }
 function sendNextDateReminder() {
   if (!settings.coupleNames) { showToast('שמרו הגדרות תחילה'); return; }
@@ -1010,6 +1017,8 @@ let _pendingEntry = null;
 async function submitRSVP() {
   const name = document.getElementById('guestName').value.trim();
   if (!name) { showToast('נא להזין שם'); return; }
+  const phoneVal = document.getElementById('guestPhone').value.trim();
+  if (!phoneVal) { showToast('נא להזין מספר טלפון'); return; }
   if (!selectedChoice) { showToast('נא לבחור האם תגיעו'); return; }
 
   const s = JSON.parse(localStorage.getItem('weddingSettings') || '{}');
@@ -1173,8 +1182,14 @@ function renderResponsesTable() {
   }, 0);
 
   // pending = contacts who haven't responded
+  // Matched by phone first; falls back to normalized name so responses
+  // submitted with no phone (or a phone that doesn't match the contact
+  // list) don't get stuck showing as "pending" forever.
   const respondedPhones = new Set(responses.map(r => last9(r.phone)).filter(Boolean));
-  const pending = contacts.filter(c => !respondedPhones.has(last9(c.phone)));
+  const respondedNames = new Set(responses.map(r => normalizeName(r.name)).filter(Boolean));
+  const pending = contacts.filter(c =>
+    !respondedPhones.has(last9(c.phone)) && !respondedNames.has(normalizeName(c.name))
+  );
 
   document.getElementById('statComing').textContent = totalGuests;
   document.getElementById('statNotComing').textContent = notComing.length;
